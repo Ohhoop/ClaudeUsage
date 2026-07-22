@@ -36,6 +36,8 @@ public sealed class OverlayForm : Form
     private bool _allowVisible;
     private bool _shown;
     private bool _fetching;
+    private bool _claudeSeen;
+    private DateTimeOffset? _claudeAbsentSince;
     private bool _dragging;
     private Point _dragOffset;
     private Font? _labelFont;
@@ -200,6 +202,21 @@ public sealed class OverlayForm : Form
         catch
         {
             return;
+        }
+
+        if (present)
+        {
+            _claudeSeen = true;
+            _claudeAbsentSince = null;
+        }
+        else if (_claudeSeen)
+        {
+            _claudeAbsentSince ??= DateTimeOffset.UtcNow;
+            if (DateTimeOffset.UtcNow - _claudeAbsentSince >= TimeSpan.FromSeconds(30))
+            {
+                Close();
+                return;
+            }
         }
 
         if (present && !_shown)
@@ -609,26 +626,32 @@ public sealed class OverlayForm : Form
         }
     }
 
+    private static readonly float[] RayJitter = { 0f, 4f, -3f, 5f, -4f, 2f, -5f, 3f, -2f, 4f };
+    private static readonly float[] RayLength = { 1f, 0.82f, 0.95f, 0.78f, 1f, 0.85f, 0.92f, 0.8f, 0.97f, 0.84f };
+
     private void DrawLogo(Graphics graphics, float scale)
     {
         var pad = ScaleValue(PadLu, scale);
         var centerX = pad + ScaleValue(LogoZoneLu, scale) / 2f - 2f * scale;
         var centerY = ClientSize.Height / 2f;
         var outer = LogoRadiusLu * scale;
-        using var pen = new Pen(Color.FromArgb(217, 119, 87), Math.Max(2f * scale, 1.5f))
-        {
-            StartCap = LineCap.Round,
-            EndCap = LineCap.Round,
-        };
+        using var brush = new SolidBrush(Color.FromArgb(217, 119, 87));
 
-        for (var i = 0; i < 12; i++)
+        for (var i = 0; i < RayJitter.Length; i++)
         {
-            var angle = Math.PI / 6 * i + Math.PI / 12;
-            var length = (float)(i % 2 == 0 ? outer : outer * 0.68);
-            var inner = outer * 0.25f;
+            var angle = 2 * Math.PI * i / RayJitter.Length + RayJitter[i] * Math.PI / 180;
+            var tip = outer * RayLength[i];
+            var baseRadius = outer * 0.16f;
+            var halfWidth = outer * 0.11f;
             var cos = (float)Math.Cos(angle);
             var sin = (float)Math.Sin(angle);
-            graphics.DrawLine(pen, centerX + cos * inner, centerY + sin * inner, centerX + cos * length, centerY + sin * length);
+            var points = new[]
+            {
+                new PointF(centerX + cos * baseRadius - sin * halfWidth, centerY + sin * baseRadius + cos * halfWidth),
+                new PointF(centerX + cos * tip, centerY + sin * tip),
+                new PointF(centerX + cos * baseRadius + sin * halfWidth, centerY + sin * baseRadius - cos * halfWidth),
+            };
+            graphics.FillPolygon(brush, points);
         }
     }
 
