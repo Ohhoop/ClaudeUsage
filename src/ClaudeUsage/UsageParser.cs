@@ -46,7 +46,7 @@ public static class UsageParser
             }
         }
 
-        AddRow(rows, byKind, "session", _ => "5 h");
+        AddRow(rows, byKind, "session", _ => "Session courante (5h)");
         AddRow(rows, byKind, "weekly_all", _ => "Hebdomadaire");
         AddRow(rows, byKind, "weekly_scoped", ScopedLabel);
         return rows;
@@ -85,7 +85,7 @@ public static class UsageParser
     private static List<LimitRow> ParseLegacy(JsonElement root)
     {
         var rows = new List<LimitRow>();
-        AddLegacyRow(rows, root, "five_hour", "session", "5 h");
+        AddLegacyRow(rows, root, "five_hour", "session", "Session courante (5h)");
         AddLegacyRow(rows, root, "seven_day", "weekly_all", "Hebdomadaire");
         return rows;
     }

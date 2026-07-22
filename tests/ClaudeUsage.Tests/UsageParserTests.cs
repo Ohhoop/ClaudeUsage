@@ -29,7 +29,7 @@ public sealed class UsageParserTests
 
         Assert.Equal(3, snapshot.Rows.Count);
         Assert.Equal(new[] { "session", "weekly_all", "weekly_scoped" }, snapshot.Rows.Select(r => r.Kind));
-        Assert.Equal(new[] { "5 h", "Hebdomadaire", "Fable" }, snapshot.Rows.Select(r => r.Label));
+        Assert.Equal(new[] { "Session courante (5h)", "Hebdomadaire", "Fable" }, snapshot.Rows.Select(r => r.Label));
         Assert.Equal(new[] { 56.0, 6.0, 11.0 }, snapshot.Rows.Select(r => r.Percent));
         Assert.All(snapshot.Rows, r => Assert.Equal("normal", r.Severity));
         Assert.Equal(DateTimeOffset.Parse("2026-07-22T19:20:00.226808+00:00"), snapshot.Rows[0].ResetsAt);
@@ -103,7 +103,7 @@ public sealed class UsageParserTests
 
         Assert.Equal(2, snapshot.Rows.Count);
         Assert.Equal(new[] { "session", "weekly_all" }, snapshot.Rows.Select(r => r.Kind));
-        Assert.Equal(new[] { "5 h", "Hebdomadaire" }, snapshot.Rows.Select(r => r.Label));
+        Assert.Equal(new[] { "Session courante (5h)", "Hebdomadaire" }, snapshot.Rows.Select(r => r.Label));
         Assert.Equal(56.5, snapshot.Rows[0].Percent);
         Assert.All(snapshot.Rows, r => Assert.Null(r.Severity));
     }
