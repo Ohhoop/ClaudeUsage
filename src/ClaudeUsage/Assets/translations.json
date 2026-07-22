@@ -20,7 +20,7 @@
     "tooltip.stale": "Stale data, retrying",
     "menu.refresh": "Refresh",
     "menu.opacity": "Opacity",
-    "menu.notifyOnReset": "Notify on reset",
+    "menu.notifyOnReset": "Notify on limit reset",
     "menu.launchWithClaude": "Launch with Claude Code",
     "menu.quit": "Quit",
     "notification.reset": "{0} limit reset"
