@@ -61,6 +61,11 @@ public sealed class OverlayForm : Form
         ApplyStoredPosition();
         BuildContextMenu();
 
+        if (SessionHook.Exists() && !SessionHook.MatchesCurrentPath())
+        {
+            SessionHook.TryEnable();
+        }
+
         _trayIcon.Icon = CreateTrayIcon();
         _trayIcon.Text = "ClaudeUsage";
         _trayIcon.ContextMenuStrip = ContextMenuStrip;
@@ -503,6 +508,23 @@ public sealed class OverlayForm : Form
         };
         menu.Items.Add(notifyItem);
 
+        var hookItem = new ToolStripMenuItem("Lancer avec Claude Code") { Checked = SessionHook.Exists() };
+        hookItem.Click += (_, _) =>
+        {
+            if (SessionHook.Exists())
+            {
+                SessionHook.TryDisable();
+            }
+            else
+            {
+                SessionHook.TryEnable();
+            }
+
+            hookItem.Checked = SessionHook.Exists();
+        };
+        menu.Items.Add(hookItem);
+        menu.Opening += (_, _) => hookItem.Checked = SessionHook.Exists();
+
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(new ToolStripMenuItem("Quitter", null, (_, _) => Close()));
         ContextMenuStrip = menu;
@@ -628,11 +650,37 @@ public sealed class OverlayForm : Form
 
     private static readonly float[] RayJitter = { 0f, 4f, -3f, 5f, -4f, 2f, -5f, 3f, -2f, 4f };
     private static readonly float[] RayLength = { 1f, 0.82f, 0.95f, 0.78f, 1f, 0.85f, 0.92f, 0.8f, 0.97f, 0.84f };
+    private static readonly Image? Spark = LoadSpark();
+
+    private static Image? LoadSpark()
+    {
+        try
+        {
+            using var stream = typeof(OverlayForm).Assembly.GetManifestResourceStream("ClaudeUsage.Assets.spark.png");
+            return stream is null ? null : Image.FromStream(stream);
+        }
+        catch
+        {
+            return null;
+        }
+    }
 
     private void DrawLogo(Graphics graphics, float scale)
     {
         var pad = ScaleValue(PadLu, scale);
-        var centerX = pad + ScaleValue(LogoZoneLu, scale) / 2f - 2f * scale;
+        var zone = ScaleValue(LogoZoneLu, scale);
+
+        if (Spark is not null)
+        {
+            var size = ScaleValue(20, scale);
+            var x = pad + (zone - size) / 2 - ScaleValue(2, scale);
+            var y = (ClientSize.Height - size) / 2;
+            graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            graphics.DrawImage(Spark, new Rectangle(x, y, size, size));
+            return;
+        }
+
+        var centerX = pad + zone / 2f - 2f * scale;
         var centerY = ClientSize.Height / 2f;
         var outer = LogoRadiusLu * scale;
         using var brush = new SolidBrush(Color.FromArgb(217, 119, 87));
