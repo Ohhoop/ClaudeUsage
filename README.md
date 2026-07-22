@@ -32,8 +32,12 @@ Le premier appel exécute les tests puis publie `dist\ClaudeUsage.exe`. Le secon
 ## Utilisation
 
 - Glisser avec le bouton gauche pour déplacer la fenêtre; la position est mémorisée.
-- Clic droit (sur l'overlay ou l'icône de zone de notification) : Actualiser, Opacité, Notifier au reset, Quitter.
+- Clic droit (sur l'overlay ou l'icône de zone de notification) : Actualiser, Opacité, Notifier au reset, Lancer avec Claude Code, Quitter.
 - Les réglages sont conservés dans `%APPDATA%\ClaudeUsage\settings.json`.
+
+## Lancement automatique
+
+L'option « Lancer avec Claude Code » gère un hook SessionStart dans `%USERPROFILE%\.claude\settings.json` : cochée, le hook est présent et chaque session Claude Code démarre l'overlay; décochée, le hook est retiré. Le reste du fichier est préservé tel quel. L'application quitte d'elle-même environ 30 secondes après la disparition du dernier processus `claude`. Ouvrir l'app Claude uniquement pour du clavardage, sans session, ne déclenche pas le lancement.
 
 ## États dégradés
 
