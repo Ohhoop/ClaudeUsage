@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using System.Globalization;
+
 namespace ClaudeUsage;
 
 public sealed class OverlayForm : Form
@@ -11,12 +14,21 @@ public sealed class OverlayForm : Form
     private const int WsExToolWindow = 0x00000080;
     private const int WsExNoActivate = 0x08000000;
 
+    private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-CA");
+
     private readonly AppSettings _settings;
+    private readonly System.Windows.Forms.Timer _presenceTimer = new();
+    private readonly System.Windows.Forms.Timer _fetchTimer = new();
+    private readonly System.Windows.Forms.Timer _tickTimer = new();
+    private readonly ToolTip _toolTip = new();
 
     private UsageSnapshot? _snapshot;
     private FetchStatus _status = FetchStatus.Ok;
+    private DateTimeOffset _lastSuccessUtc;
     private string[] _countdowns = Array.Empty<string>();
     private bool _allowVisible;
+    private bool _shown;
+    private bool _fetching;
     private Font? _font;
 
     public OverlayForm()
@@ -34,6 +46,16 @@ public sealed class OverlayForm : Form
 
         UpdateSize();
         ApplyStoredPosition();
+
+        _presenceTimer.Interval = 200;
+        _presenceTimer.Tick += OnPresenceTick;
+        _presenceTimer.Start();
+
+        _fetchTimer.Interval = 60_000;
+        _fetchTimer.Tick += (_, _) => _ = FetchNowAsync();
+
+        _tickTimer.Interval = 1_000;
+        _tickTimer.Tick += OnCountdownTick;
     }
 
     protected override bool ShowWithoutActivation => true;
@@ -98,10 +120,203 @@ public sealed class OverlayForm : Form
     {
         if (disposing)
         {
+            _presenceTimer.Dispose();
+            _fetchTimer.Dispose();
+            _tickTimer.Dispose();
+            _toolTip.Dispose();
             _font?.Dispose();
         }
 
         base.Dispose(disposing);
+    }
+
+    private void OnPresenceTick(object? sender, EventArgs e)
+    {
+        if (_presenceTimer.Interval != 5_000)
+        {
+            _presenceTimer.Interval = 5_000;
+        }
+
+        bool present;
+        try
+        {
+            var processes = Process.GetProcessesByName("claude");
+            present = processes.Length > 0;
+            foreach (var process in processes)
+            {
+                process.Dispose();
+            }
+        }
+        catch
+        {
+            return;
+        }
+
+        if (present && !_shown)
+        {
+            ShowOverlay();
+        }
+        else if (!present && _shown)
+        {
+            HideOverlay();
+        }
+
+        if (_shown)
+        {
+            EnsureOnScreen();
+        }
+    }
+
+    private void ShowOverlay()
+    {
+        _shown = true;
+        _allowVisible = true;
+        Show();
+        TopMost = false;
+        TopMost = true;
+        _fetchTimer.Start();
+        _tickTimer.Start();
+        _ = FetchNowAsync();
+    }
+
+    private void HideOverlay()
+    {
+        _shown = false;
+        _fetchTimer.Stop();
+        _tickTimer.Stop();
+        Hide();
+    }
+
+    private async Task FetchNowAsync()
+    {
+        if (_fetching)
+        {
+            return;
+        }
+
+        _fetching = true;
+        try
+        {
+            var outcome = await UsageClient.FetchAsync();
+            if (outcome.Status == FetchStatus.Ok && outcome.Snapshot is not null)
+            {
+                _snapshot = outcome.Snapshot;
+                _lastSuccessUtc = DateTimeOffset.UtcNow;
+                _status = FetchStatus.Ok;
+                RefreshCountdowns();
+                UpdateSize();
+            }
+            else
+            {
+                _status = outcome.Status;
+            }
+
+            UpdateToolTip();
+            Invalidate();
+        }
+        catch
+        {
+            _status = FetchStatus.Transient;
+        }
+        finally
+        {
+            _fetching = false;
+        }
+    }
+
+    private void OnCountdownTick(object? sender, EventArgs e)
+    {
+        if (_snapshot is null)
+        {
+            return;
+        }
+
+        var previous = _countdowns;
+        RefreshCountdowns();
+        if (previous.SequenceEqual(_countdowns))
+        {
+            return;
+        }
+
+        if (previous.Length == _countdowns.Length)
+        {
+            for (var i = 0; i < previous.Length; i++)
+            {
+                if (previous[i] != _countdowns[i] && _countdowns[i] == "0 min")
+                {
+                    _ = FetchNowAsync();
+                    break;
+                }
+            }
+        }
+
+        Invalidate();
+    }
+
+    private void RefreshCountdowns()
+    {
+        var rows = _snapshot?.Rows;
+        if (rows is null)
+        {
+            _countdowns = Array.Empty<string>();
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var values = new string[rows.Count];
+        for (var i = 0; i < rows.Count; i++)
+        {
+            var resetsAt = rows[i].ResetsAt;
+            values[i] = resetsAt is null ? "n/d" : CountdownFormatter.Format(resetsAt.Value - now);
+        }
+
+        _countdowns = values;
+    }
+
+    private void UpdateToolTip()
+    {
+        string text;
+        if (_snapshot is null || _snapshot.Rows.Count == 0)
+        {
+            text = StatusMessage();
+        }
+        else
+        {
+            var lines = new List<string>();
+            foreach (var row in _snapshot.Rows)
+            {
+                var reset = row.ResetsAt is null
+                    ? "n/d"
+                    : row.ResetsAt.Value.ToLocalTime().ToString("ddd d MMM HH:mm", French);
+                lines.Add($"{row.Label} : {Math.Round(row.Percent)} %, reset {reset}");
+            }
+
+            lines.Add($"Mis à jour à {_lastSuccessUtc.ToLocalTime().ToString("HH:mm:ss", French)}");
+            switch (_status)
+            {
+                case FetchStatus.NoToken:
+                    lines.Add("Jeton introuvable");
+                    break;
+                case FetchStatus.AuthExpired:
+                    lines.Add("Jeton expiré, ouvrez Claude");
+                    break;
+                case FetchStatus.Transient:
+                    lines.Add("Données périmées, nouvelle tentative en cours");
+                    break;
+            }
+
+            text = string.Join(Environment.NewLine, lines);
+        }
+
+        _toolTip.SetToolTip(this, text);
+    }
+
+    private void EnsureOnScreen()
+    {
+        if (!IsOnAnyScreen())
+        {
+            MoveToDefaultPosition();
+        }
     }
 
     private void DrawRow(Graphics graphics, Font font, LimitRow row, int index, int pad, int width, float scale)
