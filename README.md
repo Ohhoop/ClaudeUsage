@@ -10,7 +10,7 @@ Chaque ligne montre une barre de progression, le pourcentage utilisé et le dél
 
 ## Fonctionnement
 
-- Les données proviennent de l'endpoint de compte `https://api.anthropic.com/api/oauth/usage`, interrogé toutes les 60 secondes quand l'overlay est visible. Aucune consommation d'usage de modèle.
+- Les données proviennent de l'endpoint de compte `https://api.anthropic.com/api/oauth/usage`, interrogé toutes les 5 minutes quand l'overlay est visible. Aucune consommation d'usage de modèle. En cas de réponse 429, le délai Retry-After est respecté avant tout nouvel essai.
 - Le jeton d'accès est lu localement dans `%USERPROFILE%\.claude\.credentials.json`. Il n'est jamais écrit, journalisé ni transmis ailleurs qu'à l'API d'Anthropic.
 - La détection de présence vérifie toutes les 5 secondes l'existence d'un processus nommé `claude`.
 - Une icône de zone de notification donne accès au menu en tout temps et émet une notification quand une limite se réinitialise, même si l'overlay est caché, tant que l'application tourne.

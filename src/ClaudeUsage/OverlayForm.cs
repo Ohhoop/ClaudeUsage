@@ -32,6 +32,7 @@ public sealed class OverlayForm : Form
     private UsageSnapshot? _snapshot;
     private FetchStatus _status = FetchStatus.Ok;
     private DateTimeOffset _lastSuccessUtc;
+    private DateTimeOffset _nextFetchAllowedUtc = DateTimeOffset.MinValue;
     private string[] _countdowns = Array.Empty<string>();
     private bool _allowVisible;
     private bool _shown;
@@ -75,7 +76,7 @@ public sealed class OverlayForm : Form
         _presenceTimer.Tick += OnPresenceTick;
         _presenceTimer.Start();
 
-        _fetchTimer.Interval = 60_000;
+        _fetchTimer.Interval = 300_000;
         _fetchTimer.Tick += (_, _) => _ = FetchNowAsync();
 
         _tickTimer.Interval = 1_000;
@@ -160,9 +161,9 @@ public sealed class OverlayForm : Form
             }
         }
 
-        if (_status != FetchStatus.Ok)
+        if (_status != FetchStatus.Ok && DateTimeOffset.UtcNow - _lastSuccessUtc > TimeSpan.FromMinutes(10))
         {
-            using var dimBrush = new SolidBrush(Color.FromArgb(140, BackColor));
+            using var dimBrush = new SolidBrush(Color.FromArgb(80, BackColor));
             graphics.FillRectangle(dimBrush, ClientRectangle);
         }
     }
@@ -311,7 +312,7 @@ public sealed class OverlayForm : Form
 
     private async Task FetchNowAsync()
     {
-        if (_fetching)
+        if (_fetching || DateTimeOffset.UtcNow < _nextFetchAllowedUtc)
         {
             return;
         }
@@ -328,6 +329,21 @@ public sealed class OverlayForm : Form
                 SeedNotifiedResets();
                 RefreshCountdowns();
                 UpdateSize();
+            }
+            else if (outcome.Status == FetchStatus.RateLimited)
+            {
+                _status = FetchStatus.RateLimited;
+                var delay = outcome.RetryAfter ?? TimeSpan.FromMinutes(5);
+                if (delay < TimeSpan.FromSeconds(30))
+                {
+                    delay = TimeSpan.FromSeconds(30);
+                }
+                else if (delay > TimeSpan.FromHours(1))
+                {
+                    delay = TimeSpan.FromHours(1);
+                }
+
+                _nextFetchAllowedUtc = DateTimeOffset.UtcNow + delay;
             }
             else
             {
@@ -422,6 +438,9 @@ public sealed class OverlayForm : Form
                     break;
                 case FetchStatus.AuthExpired:
                     lines.Add("Jeton expiré, ouvrez Claude");
+                    break;
+                case FetchStatus.RateLimited:
+                    lines.Add($"Limite de requêtes, prochain essai à {_nextFetchAllowedUtc.ToLocalTime().ToString("HH:mm", French)}");
                     break;
                 case FetchStatus.Transient:
                     lines.Add("Données périmées, nouvelle tentative en cours");
@@ -720,6 +739,7 @@ public sealed class OverlayForm : Form
     {
         FetchStatus.NoToken => "Jeton introuvable",
         FetchStatus.AuthExpired => "Jeton expiré",
+        FetchStatus.RateLimited => "Trop de requêtes, pause",
         FetchStatus.Transient => "Connexion...",
         _ => "Chargement...",
     };

@@ -9,10 +9,11 @@ public enum FetchStatus
     Ok,
     NoToken,
     AuthExpired,
+    RateLimited,
     Transient,
 }
 
-public sealed record FetchOutcome(FetchStatus Status, UsageSnapshot? Snapshot);
+public sealed record FetchOutcome(FetchStatus Status, UsageSnapshot? Snapshot, TimeSpan? RetryAfter = null);
 
 public static class UsageClient
 {
@@ -49,6 +50,11 @@ public static class UsageClient
 
             using (response)
             {
+                if (response.StatusCode == HttpStatusCode.TooManyRequests)
+                {
+                    return new FetchOutcome(FetchStatus.RateLimited, null, GetRetryAfter(response));
+                }
+
                 if (!response.IsSuccessStatusCode)
                 {
                     return new FetchOutcome(FetchStatus.Transient, null);
@@ -62,6 +68,27 @@ public static class UsageClient
         {
             return new FetchOutcome(FetchStatus.Transient, null);
         }
+    }
+
+    private static TimeSpan? GetRetryAfter(HttpResponseMessage response)
+    {
+        var retryAfter = response.Headers.RetryAfter;
+        if (retryAfter is null)
+        {
+            return null;
+        }
+
+        if (retryAfter.Delta is TimeSpan delta)
+        {
+            return delta;
+        }
+
+        if (retryAfter.Date is DateTimeOffset date)
+        {
+            return date - DateTimeOffset.UtcNow;
+        }
+
+        return null;
     }
 
     private static async Task<HttpResponseMessage> SendAsync(string token)
