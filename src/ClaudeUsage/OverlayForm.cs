@@ -29,6 +29,8 @@ public sealed class OverlayForm : Form
     private bool _allowVisible;
     private bool _shown;
     private bool _fetching;
+    private bool _dragging;
+    private Point _dragOffset;
     private Font? _font;
 
     public OverlayForm()
@@ -46,6 +48,7 @@ public sealed class OverlayForm : Form
 
         UpdateSize();
         ApplyStoredPosition();
+        BuildContextMenu();
 
         _presenceTimer.Interval = 200;
         _presenceTimer.Tick += OnPresenceTick;
@@ -317,6 +320,88 @@ public sealed class OverlayForm : Form
         {
             MoveToDefaultPosition();
         }
+    }
+
+    protected override void OnMouseDown(MouseEventArgs e)
+    {
+        base.OnMouseDown(e);
+        if (e.Button == MouseButtons.Left)
+        {
+            _dragging = true;
+            _dragOffset = e.Location;
+        }
+    }
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        base.OnMouseMove(e);
+        if (_dragging)
+        {
+            var screenPoint = PointToScreen(e.Location);
+            Location = new Point(screenPoint.X - _dragOffset.X, screenPoint.Y - _dragOffset.Y);
+        }
+    }
+
+    protected override void OnMouseUp(MouseEventArgs e)
+    {
+        base.OnMouseUp(e);
+        if (_dragging)
+        {
+            _dragging = false;
+            _settings.X = Location.X;
+            _settings.Y = Location.Y;
+            SettingsStore.Save(_settings);
+        }
+    }
+
+    protected override void OnFormClosing(FormClosingEventArgs e)
+    {
+        _settings.X = Location.X;
+        _settings.Y = Location.Y;
+        SettingsStore.Save(_settings);
+        _presenceTimer.Stop();
+        _fetchTimer.Stop();
+        _tickTimer.Stop();
+        base.OnFormClosing(e);
+    }
+
+    private void BuildContextMenu()
+    {
+        var menu = new ContextMenuStrip();
+        menu.Items.Add(new ToolStripMenuItem("Actualiser", null, (_, _) => _ = FetchNowAsync()));
+
+        var opacityMenu = new ToolStripMenuItem("Opacité");
+        foreach (var level in SettingsStore.OpacityLevels)
+        {
+            var item = new ToolStripMenuItem($"{level} %") { Checked = _settings.OpacityPercent == level, Tag = level };
+            item.Click += OnOpacityItemClick;
+            opacityMenu.DropDownItems.Add(item);
+        }
+
+        menu.Items.Add(opacityMenu);
+        menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add(new ToolStripMenuItem("Quitter", null, (_, _) => Close()));
+        ContextMenuStrip = menu;
+    }
+
+    private void OnOpacityItemClick(object? sender, EventArgs e)
+    {
+        if (sender is not ToolStripMenuItem item || item.Tag is not int level || item.OwnerItem is not ToolStripMenuItem parent)
+        {
+            return;
+        }
+
+        _settings.OpacityPercent = level;
+        Opacity = level / 100.0;
+        foreach (ToolStripItem sibling in parent.DropDownItems)
+        {
+            if (sibling is ToolStripMenuItem menuItem)
+            {
+                menuItem.Checked = ReferenceEquals(menuItem, item);
+            }
+        }
+
+        SettingsStore.Save(_settings);
     }
 
     private void DrawRow(Graphics graphics, Font font, LimitRow row, int index, int pad, int width, float scale)
