@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace ClaudeUsage;
 
@@ -21,6 +22,8 @@ public sealed class OverlayForm : Form
     private readonly System.Windows.Forms.Timer _fetchTimer = new();
     private readonly System.Windows.Forms.Timer _tickTimer = new();
     private readonly ToolTip _toolTip = new();
+    private readonly NotifyIcon _trayIcon = new();
+    private readonly HashSet<string> _notifiedResets = new();
 
     private UsageSnapshot? _snapshot;
     private FetchStatus _status = FetchStatus.Ok;
@@ -49,6 +52,11 @@ public sealed class OverlayForm : Form
         UpdateSize();
         ApplyStoredPosition();
         BuildContextMenu();
+
+        _trayIcon.Icon = CreateTrayIcon();
+        _trayIcon.Text = "ClaudeUsage";
+        _trayIcon.ContextMenuStrip = ContextMenuStrip;
+        _trayIcon.Visible = true;
 
         _presenceTimer.Interval = 200;
         _presenceTimer.Tick += OnPresenceTick;
@@ -126,6 +134,10 @@ public sealed class OverlayForm : Form
             _presenceTimer.Dispose();
             _fetchTimer.Dispose();
             _tickTimer.Dispose();
+            _trayIcon.Visible = false;
+            var icon = _trayIcon.Icon;
+            _trayIcon.Dispose();
+            icon?.Dispose();
             _toolTip.Dispose();
             _font?.Dispose();
         }
@@ -168,7 +180,57 @@ public sealed class OverlayForm : Form
         {
             EnsureOnScreen();
         }
+
+        CheckResetNotifications();
     }
+
+    private void CheckResetNotifications()
+    {
+        var rows = _snapshot?.Rows;
+        if (rows is null)
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        foreach (var row in rows)
+        {
+            if (row.ResetsAt is not DateTimeOffset resetsAt || now < resetsAt)
+            {
+                continue;
+            }
+
+            if (!_notifiedResets.Add(ResetKey(row.Kind, resetsAt)))
+            {
+                continue;
+            }
+
+            if (_settings.NotifyOnReset)
+            {
+                _trayIcon.ShowBalloonTip(5000, "ClaudeUsage", $"Limite {row.Label} réinitialisée", ToolTipIcon.Info);
+            }
+        }
+    }
+
+    private void SeedNotifiedResets()
+    {
+        var rows = _snapshot?.Rows;
+        if (rows is null)
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        foreach (var row in rows)
+        {
+            if (row.ResetsAt is DateTimeOffset resetsAt && now >= resetsAt)
+            {
+                _notifiedResets.Add(ResetKey(row.Kind, resetsAt));
+            }
+        }
+    }
+
+    private static string ResetKey(string kind, DateTimeOffset resetsAt) => $"{kind}|{resetsAt.UtcTicks}";
 
     private void ShowOverlay()
     {
@@ -206,6 +268,7 @@ public sealed class OverlayForm : Form
                 _snapshot = outcome.Snapshot;
                 _lastSuccessUtc = DateTimeOffset.UtcNow;
                 _status = FetchStatus.Ok;
+                SeedNotifiedResets();
                 RefreshCountdowns();
                 UpdateSize();
             }
@@ -379,10 +442,50 @@ public sealed class OverlayForm : Form
         }
 
         menu.Items.Add(opacityMenu);
+
+        var notifyItem = new ToolStripMenuItem("Notifier au reset") { Checked = _settings.NotifyOnReset, CheckOnClick = true };
+        notifyItem.CheckedChanged += (_, _) =>
+        {
+            _settings.NotifyOnReset = notifyItem.Checked;
+            SettingsStore.Save(_settings);
+        };
+        menu.Items.Add(notifyItem);
+
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(new ToolStripMenuItem("Quitter", null, (_, _) => Close()));
         ContextMenuStrip = menu;
     }
+
+    private static Icon CreateTrayIcon()
+    {
+        using var bitmap = new Bitmap(16, 16);
+        using (var graphics = Graphics.FromImage(bitmap))
+        {
+            graphics.Clear(Color.FromArgb(24, 24, 26));
+            using var trackBrush = new SolidBrush(SeverityColors.Track);
+            using var fillBrush = new SolidBrush(SeverityColors.Neutral);
+            graphics.FillRectangle(trackBrush, 2, 2, 12, 3);
+            graphics.FillRectangle(fillBrush, 2, 2, 9, 3);
+            graphics.FillRectangle(trackBrush, 2, 7, 12, 3);
+            graphics.FillRectangle(fillBrush, 2, 7, 4, 3);
+            graphics.FillRectangle(trackBrush, 2, 12, 12, 3);
+            graphics.FillRectangle(fillBrush, 2, 12, 6, 3);
+        }
+
+        var handle = bitmap.GetHicon();
+        try
+        {
+            using var temporary = Icon.FromHandle(handle);
+            return (Icon)temporary.Clone();
+        }
+        finally
+        {
+            DestroyIcon(handle);
+        }
+    }
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool DestroyIcon(IntPtr handle);
 
     private void OnOpacityItemClick(object? sender, EventArgs e)
     {

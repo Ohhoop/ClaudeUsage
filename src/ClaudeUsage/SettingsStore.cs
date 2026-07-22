@@ -13,6 +13,8 @@ public sealed class AppSettings
     public bool AutoStart { get; set; }
 
     public bool FirstRunDone { get; set; }
+
+    public bool NotifyOnReset { get; set; } = true;
 }
 
 public static class SettingsStore
