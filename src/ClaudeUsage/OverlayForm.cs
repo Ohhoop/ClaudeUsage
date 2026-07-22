@@ -76,7 +76,7 @@ public sealed class OverlayForm : Form
         _presenceTimer.Tick += OnPresenceTick;
         _presenceTimer.Start();
 
-        _fetchTimer.Interval = 300_000;
+        _fetchTimer.Interval = 120_000;
         _fetchTimer.Tick += (_, _) => _ = FetchNowAsync();
 
         _tickTimer.Interval = 1_000;
