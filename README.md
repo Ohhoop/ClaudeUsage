@@ -32,8 +32,7 @@ Le premier appel exécute les tests puis publie `dist\ClaudeUsage.exe`. Le secon
 ## Utilisation
 
 - Glisser avec le bouton gauche pour déplacer la fenêtre; la position est mémorisée.
-- Clic droit (sur l'overlay ou l'icône de zone de notification) : Actualiser, Opacité, Notifier au reset, Lancer au démarrage, Quitter.
-- Au premier lancement, un raccourci est créé dans le dossier Démarrage de l'utilisateur; l'option « Lancer au démarrage » permet de le retirer. Le raccourci est recréé automatiquement si l'exécutable change d'emplacement.
+- Clic droit (sur l'overlay ou l'icône de zone de notification) : Actualiser, Opacité, Notifier au reset, Quitter.
 - Les réglages sont conservés dans `%APPDATA%\ClaudeUsage\settings.json`.
 
 ## États dégradés
@@ -46,4 +45,3 @@ Le premier appel exécute les tests puis publie `dist\ClaudeUsage.exe`. Le secon
 
 - Les fenêtres en plein écran exclusif (jeux) peuvent recouvrir l'overlay.
 - Les notifications respectent l'assistant de concentration de Windows et peuvent être masquées par celui-ci.
-- Le lancement automatique repose sur le dossier Démarrage : l'application démarre à l'ouverture de session et reste cachée tant qu'aucun processus `claude` n'existe.

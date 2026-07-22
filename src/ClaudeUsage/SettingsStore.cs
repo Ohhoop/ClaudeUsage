@@ -10,10 +10,6 @@ public sealed class AppSettings
 
     public int OpacityPercent { get; set; } = 85;
 
-    public bool AutoStart { get; set; }
-
-    public bool FirstRunDone { get; set; }
-
     public bool NotifyOnReset { get; set; } = true;
 }
 
