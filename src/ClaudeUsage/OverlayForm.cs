@@ -52,6 +52,7 @@ public sealed class OverlayForm : Form
         UpdateSize();
         ApplyStoredPosition();
         BuildContextMenu();
+        RunFirstRunSetup();
 
         _trayIcon.Icon = CreateTrayIcon();
         _trayIcon.Text = "ClaudeUsage";
@@ -231,6 +232,20 @@ public sealed class OverlayForm : Form
     }
 
     private static string ResetKey(string kind, DateTimeOffset resetsAt) => $"{kind}|{resetsAt.UtcTicks}";
+
+    private void RunFirstRunSetup()
+    {
+        if (!_settings.FirstRunDone)
+        {
+            _settings.AutoStart = StartupShortcut.TryCreate();
+            _settings.FirstRunDone = true;
+            SettingsStore.Save(_settings);
+        }
+        else if (_settings.AutoStart)
+        {
+            StartupShortcut.TryCreate();
+        }
+    }
 
     private void ShowOverlay()
     {
@@ -450,6 +465,26 @@ public sealed class OverlayForm : Form
             SettingsStore.Save(_settings);
         };
         menu.Items.Add(notifyItem);
+
+        var autoStartItem = new ToolStripMenuItem("Lancer au démarrage");
+        autoStartItem.Click += (_, _) =>
+        {
+            if (StartupShortcut.Exists())
+            {
+                StartupShortcut.Remove();
+                _settings.AutoStart = false;
+            }
+            else
+            {
+                _settings.AutoStart = StartupShortcut.TryCreate();
+            }
+
+            autoStartItem.Checked = _settings.AutoStart;
+            SettingsStore.Save(_settings);
+        };
+        menu.Items.Add(autoStartItem);
+
+        menu.Opening += (_, _) => autoStartItem.Checked = StartupShortcut.Exists();
 
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(new ToolStripMenuItem("Quitter", null, (_, _) => Close()));
