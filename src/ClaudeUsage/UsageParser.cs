@@ -46,8 +46,8 @@ public static class UsageParser
             }
         }
 
-        AddRow(rows, byKind, "session", _ => "Session courante (5h)");
-        AddRow(rows, byKind, "weekly_all", _ => "Hebdomadaire");
+        AddRow(rows, byKind, "session", _ => Loc.T("label.session"));
+        AddRow(rows, byKind, "weekly_all", _ => Loc.T("label.weekly"));
         AddRow(rows, byKind, "weekly_scoped", ScopedLabel);
         return rows;
     }
@@ -79,14 +79,14 @@ public static class UsageParser
             }
         }
 
-        return "Modèle";
+        return Loc.T("label.model");
     }
 
     private static List<LimitRow> ParseLegacy(JsonElement root)
     {
         var rows = new List<LimitRow>();
-        AddLegacyRow(rows, root, "five_hour", "session", "Session courante (5h)");
-        AddLegacyRow(rows, root, "seven_day", "weekly_all", "Hebdomadaire");
+        AddLegacyRow(rows, root, "five_hour", "session", Loc.T("label.session"));
+        AddLegacyRow(rows, root, "seven_day", "weekly_all", Loc.T("label.weekly"));
         return rows;
     }
 

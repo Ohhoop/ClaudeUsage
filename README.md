@@ -35,6 +35,10 @@ Le premier appel exécute les tests puis publie `dist\ClaudeUsage.exe`. Le secon
 - Clic droit (sur l'overlay ou l'icône de zone de notification) : Actualiser, Opacité, Notifier au reset, Lancer avec Claude Code, Quitter.
 - Les réglages sont conservés dans `%APPDATA%\ClaudeUsage\settings.json`.
 
+## Langues
+
+L'interface suit la langue d'affichage de Windows. Les traductions sont embarquées dans l'exécutable (`translations.json`) pour une quarantaine de langues; l'anglais est la langue par défaut et sert de repli pour toute langue absente ou toute clé manquante. La résolution suit la chaîne de la culture Windows (par exemple `fr-CA`, puis `fr`, puis `en`). Les formats de date et d'heure suivent les paramètres régionaux de Windows. Pour surcharger ou ajouter des traductions sans recompiler, déposez un fichier `translations.json` de même structure à côté de l'exécutable : ses valeurs remplacent celles embarquées.
+
 ## Lancement automatique
 
 L'option « Lancer avec Claude Code » gère un hook SessionStart dans `%USERPROFILE%\.claude\settings.json` : cochée, le hook est présent et chaque session Claude Code démarre l'overlay; décochée, le hook est retiré. Le reste du fichier est préservé tel quel. L'application quitte d'elle-même environ 30 secondes après la disparition du dernier processus `claude`. Ouvrir l'app Claude uniquement pour du clavardage, sans session, ne déclenche pas le lancement.

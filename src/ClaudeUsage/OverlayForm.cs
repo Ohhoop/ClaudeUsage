@@ -19,9 +19,9 @@ public sealed class OverlayForm : Form
     private const int WsExToolWindow = 0x00000080;
     private const int WsExNoActivate = 0x08000000;
 
-    private static readonly CultureInfo French = CultureInfo.GetCultureInfo("fr-CA");
-
     private readonly AppSettings _settings;
+    private readonly string _countdownZero = Loc.T("countdown.zero");
+    private readonly string _naText = Loc.T("na");
     private readonly System.Windows.Forms.Timer _presenceTimer = new();
     private readonly System.Windows.Forms.Timer _fetchTimer = new();
     private readonly System.Windows.Forms.Timer _tickTimer = new();
@@ -265,7 +265,7 @@ public sealed class OverlayForm : Form
 
             if (_settings.NotifyOnReset)
             {
-                _trayIcon.ShowBalloonTip(5000, "ClaudeUsage", $"Limite {row.Label} réinitialisée", ToolTipIcon.Info);
+                _trayIcon.ShowBalloonTip(5000, "ClaudeUsage", string.Format(CultureInfo.CurrentCulture, Loc.T("notification.reset"), row.Label), ToolTipIcon.Info);
             }
         }
     }
@@ -381,7 +381,7 @@ public sealed class OverlayForm : Form
         {
             for (var i = 0; i < previous.Length; i++)
             {
-                if (previous[i] != _countdowns[i] && _countdowns[i] == "0 min")
+                if (previous[i] != _countdowns[i] && _countdowns[i] == _countdownZero)
                 {
                     _ = FetchNowAsync();
                     break;
@@ -406,7 +406,7 @@ public sealed class OverlayForm : Form
         for (var i = 0; i < rows.Count; i++)
         {
             var resetsAt = rows[i].ResetsAt;
-            values[i] = resetsAt is null ? "n/d" : CountdownFormatter.Format(resetsAt.Value - now);
+            values[i] = resetsAt is null ? _naText : CountdownFormatter.Format(resetsAt.Value - now);
         }
 
         _countdowns = values;
@@ -421,29 +421,30 @@ public sealed class OverlayForm : Form
         }
         else
         {
+            var culture = CultureInfo.CurrentCulture;
             var lines = new List<string>();
             foreach (var row in _snapshot.Rows)
             {
                 var reset = row.ResetsAt is null
-                    ? "n/d"
-                    : row.ResetsAt.Value.ToLocalTime().ToString("ddd d MMM HH:mm", French);
-                lines.Add($"{row.Label} : {Math.Round(row.Percent)} %, reset {reset}");
+                    ? _naText
+                    : row.ResetsAt.Value.ToLocalTime().ToString("ddd d MMM HH:mm", culture);
+                lines.Add(string.Format(culture, Loc.T("tooltip.row"), row.Label, Math.Round(row.Percent), reset));
             }
 
-            lines.Add($"Mis à jour à {_lastSuccessUtc.ToLocalTime().ToString("HH:mm:ss", French)}");
+            lines.Add(string.Format(culture, Loc.T("tooltip.updatedAt"), _lastSuccessUtc.ToLocalTime().ToString("HH:mm:ss", culture)));
             switch (_status)
             {
                 case FetchStatus.NoToken:
-                    lines.Add("Jeton introuvable");
+                    lines.Add(Loc.T("status.noToken"));
                     break;
                 case FetchStatus.AuthExpired:
-                    lines.Add("Jeton expiré, ouvrez Claude");
+                    lines.Add(Loc.T("tooltip.authExpired"));
                     break;
                 case FetchStatus.RateLimited:
-                    lines.Add($"Limite de requêtes, prochain essai à {_nextFetchAllowedUtc.ToLocalTime().ToString("HH:mm", French)}");
+                    lines.Add(string.Format(culture, Loc.T("tooltip.rateLimited"), _nextFetchAllowedUtc.ToLocalTime().ToString("HH:mm", culture)));
                     break;
                 case FetchStatus.Transient:
-                    lines.Add("Données périmées, nouvelle tentative en cours");
+                    lines.Add(Loc.T("tooltip.stale"));
                     break;
             }
 
@@ -507,9 +508,9 @@ public sealed class OverlayForm : Form
     private void BuildContextMenu()
     {
         var menu = new ContextMenuStrip();
-        menu.Items.Add(new ToolStripMenuItem("Actualiser", null, (_, _) => _ = FetchNowAsync()));
+        menu.Items.Add(new ToolStripMenuItem(Loc.T("menu.refresh"), null, (_, _) => _ = FetchNowAsync()));
 
-        var opacityMenu = new ToolStripMenuItem("Opacité");
+        var opacityMenu = new ToolStripMenuItem(Loc.T("menu.opacity"));
         foreach (var level in SettingsStore.OpacityLevels)
         {
             var item = new ToolStripMenuItem($"{level} %") { Checked = _settings.OpacityPercent == level, Tag = level };
@@ -519,7 +520,7 @@ public sealed class OverlayForm : Form
 
         menu.Items.Add(opacityMenu);
 
-        var notifyItem = new ToolStripMenuItem("Notifier au reset") { Checked = _settings.NotifyOnReset, CheckOnClick = true };
+        var notifyItem = new ToolStripMenuItem(Loc.T("menu.notifyOnReset")) { Checked = _settings.NotifyOnReset, CheckOnClick = true };
         notifyItem.CheckedChanged += (_, _) =>
         {
             _settings.NotifyOnReset = notifyItem.Checked;
@@ -527,7 +528,7 @@ public sealed class OverlayForm : Form
         };
         menu.Items.Add(notifyItem);
 
-        var hookItem = new ToolStripMenuItem("Lancer avec Claude Code") { Checked = SessionHook.Exists() };
+        var hookItem = new ToolStripMenuItem(Loc.T("menu.launchWithClaude")) { Checked = SessionHook.Exists() };
         hookItem.Click += (_, _) =>
         {
             if (SessionHook.Exists())
@@ -545,7 +546,7 @@ public sealed class OverlayForm : Form
         menu.Opening += (_, _) => hookItem.Checked = SessionHook.Exists();
 
         menu.Items.Add(new ToolStripSeparator());
-        menu.Items.Add(new ToolStripMenuItem("Quitter", null, (_, _) => Close()));
+        menu.Items.Add(new ToolStripMenuItem(Loc.T("menu.quit"), null, (_, _) => Close()));
         ContextMenuStrip = menu;
     }
 
@@ -737,11 +738,11 @@ public sealed class OverlayForm : Form
 
     private string StatusMessage() => _status switch
     {
-        FetchStatus.NoToken => "Jeton introuvable",
-        FetchStatus.AuthExpired => "Jeton expiré",
-        FetchStatus.RateLimited => "Trop de requêtes, pause",
-        FetchStatus.Transient => "Connexion...",
-        _ => "Chargement...",
+        FetchStatus.NoToken => Loc.T("status.noToken"),
+        FetchStatus.AuthExpired => Loc.T("status.authExpired"),
+        FetchStatus.RateLimited => Loc.T("status.rateLimited"),
+        FetchStatus.Transient => Loc.T("status.connecting"),
+        _ => Loc.T("status.loading"),
     };
 
     private void UpdateSize()

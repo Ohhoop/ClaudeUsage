@@ -5,6 +5,11 @@ namespace ClaudeUsage.Tests;
 
 public sealed class UsageParserTests
 {
+    public UsageParserTests()
+    {
+        Loc.ForcedLanguage = "fr";
+    }
+
     private const string RealPayload = """
     {
         "five_hour": { "utilization": 56.0, "resets_at": "2026-07-22T19:20:00.226808+00:00", "limit_dollars": null },
@@ -180,5 +185,25 @@ public sealed class UsageParserTests
     public void Parse_MalformedJson_ThrowsJsonException()
     {
         Assert.ThrowsAny<JsonException>(() => UsageParser.Parse("{ pas du json"));
+    }
+
+    [Fact]
+    public void Parse_EnglishLanguage_UsesEnglishLabels()
+    {
+        Loc.ForcedLanguage = "en";
+
+        var snapshot = UsageParser.Parse(RealPayload);
+
+        Assert.Equal(new[] { "Current session (5h)", "Weekly", "Fable" }, snapshot.Rows.Select(r => r.Label));
+    }
+
+    [Fact]
+    public void Parse_UnknownLanguage_FallsBackToEnglishLabels()
+    {
+        Loc.ForcedLanguage = "tlh";
+
+        var snapshot = UsageParser.Parse(RealPayload);
+
+        Assert.Equal(new[] { "Current session (5h)", "Weekly", "Fable" }, snapshot.Rows.Select(r => r.Label));
     }
 }

@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Assets\spark.png" />
+    <EmbeddedResource Include="Assets\translations.json" />
   </ItemGroup>
 
 </Project>

@@ -1,25 +1,31 @@
+using System.Globalization;
+
 namespace ClaudeUsage;
 
 public static class CountdownFormatter
 {
-    public static string Format(TimeSpan remaining)
+    public static string Format(TimeSpan remaining) => Format(remaining, Loc.GetCountdownFormats());
+
+    public static string Format(TimeSpan remaining, CountdownFormats formats)
     {
         if (remaining <= TimeSpan.Zero)
         {
-            return "0 min";
+            return formats.Zero;
         }
 
         if (remaining < TimeSpan.FromHours(1))
         {
             var minutes = (int)Math.Ceiling(remaining.TotalMinutes);
-            return minutes >= 60 ? "1 h 00" : $"{minutes} min";
+            return minutes >= 60
+                ? string.Format(CultureInfo.InvariantCulture, formats.HoursMinutes, 1, 0)
+                : string.Format(CultureInfo.InvariantCulture, formats.Minutes, minutes);
         }
 
         if (remaining < TimeSpan.FromDays(1))
         {
-            return $"{(int)remaining.TotalHours} h {remaining.Minutes:00}";
+            return string.Format(CultureInfo.InvariantCulture, formats.HoursMinutes, (int)remaining.TotalHours, remaining.Minutes);
         }
 
-        return $"{remaining.Days} j {remaining.Hours} h";
+        return string.Format(CultureInfo.InvariantCulture, formats.DaysHours, remaining.Days, remaining.Hours);
     }
 }
