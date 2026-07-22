@@ -13,7 +13,7 @@ public sealed class OverlayForm : Form
     private const int LogoRadiusLu = 9;
     private const int MainRowLu = 26;
     private const int GapLu = 4;
-    private const int SubRowLu = 14;
+    private const int SubRowLu = 20;
     private const int RadiusLu = 10;
     private const int EdgeLu = 12;
     private const int WsExToolWindow = 0x00000080;
@@ -142,15 +142,14 @@ public sealed class OverlayForm : Form
             var subTop = pad + ScaleValue(MainRowLu, scale) + ScaleValue(GapLu, scale);
             if (others.Count == 1)
             {
-                DrawCompactCell(graphics, rows[others[0]], contentX, subTop, contentWidth, scale);
+                DrawCompactCell(graphics, rows[others[0]], others[0], contentX, subTop, contentWidth, scale);
             }
             else if (others.Count == 2)
             {
-                var cellGap = ScaleValue(8, scale);
-                var firstWidth = (contentWidth - cellGap) * 3 / 5;
-                var secondWidth = contentWidth - cellGap - firstWidth;
-                DrawCompactCell(graphics, rows[others[0]], contentX, subTop, firstWidth, scale);
-                DrawCompactCell(graphics, rows[others[1]], contentX + firstWidth + cellGap, subTop, secondWidth, scale);
+                var cellGap = ScaleValue(10, scale);
+                var cellWidth = (contentWidth - cellGap) / 2;
+                DrawCompactCell(graphics, rows[others[0]], others[0], contentX, subTop, cellWidth, scale);
+                DrawCompactCell(graphics, rows[others[1]], others[1], contentX + cellWidth + cellGap, subTop, cellWidth, scale);
             }
         }
 
@@ -563,29 +562,28 @@ public sealed class OverlayForm : Form
         DrawBar(graphics, x, barTop, width, barHeight, row.Percent, color);
     }
 
-    private void DrawCompactCell(Graphics graphics, LimitRow row, int x, int top, int width, float scale)
+    private void DrawCompactCell(Graphics graphics, LimitRow row, int index, int x, int top, int width, float scale)
     {
         var color = SeverityColors.ForLimit(row.Severity, row.Percent);
         var subFont = GetSubFont();
         var percentText = $"{Math.Round(row.Percent)} %";
-        var labelSize = TextRenderer.MeasureText(graphics, row.Label, subFont, Size.Empty, TextFormatFlags.NoPadding);
+        var countdown = index < _countdowns.Length ? _countdowns[index] : string.Empty;
         var percentSize = TextRenderer.MeasureText(graphics, percentText, subFont, Size.Empty, TextFormatFlags.NoPadding);
-        var textY = top + ScaleValue(1, scale);
+        var countdownSize = TextRenderer.MeasureText(graphics, countdown, subFont, Size.Empty, TextFormatFlags.NoPadding);
 
-        TextRenderer.DrawText(graphics, row.Label, subFont, new Point(x, textY), SeverityColors.MutedText, TextFormatFlags.NoPadding);
-        TextRenderer.DrawText(graphics, percentText, subFont, new Point(x + width - percentSize.Width, textY), color, TextFormatFlags.NoPadding);
+        TextRenderer.DrawText(graphics, row.Label, subFont, new Point(x, top), SeverityColors.MutedText, TextFormatFlags.NoPadding);
+        TextRenderer.DrawText(graphics, countdown, subFont, new Point(x + width - countdownSize.Width, top), SeverityColors.MutedText, TextFormatFlags.NoPadding);
 
-        var margin = ScaleValue(4, scale);
-        var barX = x + labelSize.Width + margin;
-        var barWidth = width - labelSize.Width - percentSize.Width - margin * 2;
-        if (barWidth <= ScaleValue(6, scale))
+        var margin = ScaleValue(6, scale);
+        var barHeight = Math.Max(ScaleValue(4, scale), 2);
+        var barY = top + ScaleValue(14, scale);
+        var barWidth = width - percentSize.Width - margin;
+        if (barWidth > 0)
         {
-            return;
+            DrawBar(graphics, x, barY, barWidth, barHeight, row.Percent, color);
         }
 
-        var barHeight = Math.Max(ScaleValue(4, scale), 2);
-        var barY = top + (ScaleValue(SubRowLu, scale) - barHeight) / 2;
-        DrawBar(graphics, barX, barY, barWidth, barHeight, row.Percent, color);
+        TextRenderer.DrawText(graphics, percentText, subFont, new Point(x + width - percentSize.Width, top + ScaleValue(10, scale)), color, TextFormatFlags.NoPadding);
     }
 
     private static void DrawBar(Graphics graphics, int x, int y, int width, int height, double percent, Color color)
