@@ -47,7 +47,7 @@ public static class UsageParser
         }
 
         AddRow(rows, byKind, "session", _ => "5 h");
-        AddRow(rows, byKind, "weekly_all", _ => "7 j");
+        AddRow(rows, byKind, "weekly_all", _ => "Hebdomadaire");
         AddRow(rows, byKind, "weekly_scoped", ScopedLabel);
         return rows;
     }
@@ -86,7 +86,7 @@ public static class UsageParser
     {
         var rows = new List<LimitRow>();
         AddLegacyRow(rows, root, "five_hour", "session", "5 h");
-        AddLegacyRow(rows, root, "seven_day", "weekly_all", "7 j");
+        AddLegacyRow(rows, root, "seven_day", "weekly_all", "Hebdomadaire");
         return rows;
     }
 
