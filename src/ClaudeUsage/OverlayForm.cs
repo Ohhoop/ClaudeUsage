@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Runtime.InteropServices;
 
@@ -6,11 +7,14 @@ namespace ClaudeUsage;
 
 public sealed class OverlayForm : Form
 {
-    private const int WidthLu = 210;
+    private const int WidthLu = 280;
     private const int PadLu = 8;
-    private const int RowLu = 22;
-    private const int BarLu = 4;
-    private const int BarOffsetLu = 14;
+    private const int LogoZoneLu = 26;
+    private const int LogoRadiusLu = 9;
+    private const int MainRowLu = 26;
+    private const int GapLu = 4;
+    private const int SubRowLu = 14;
+    private const int RadiusLu = 10;
     private const int EdgeLu = 12;
     private const int WsExToolWindow = 0x00000080;
     private const int WsExNoActivate = 0x08000000;
@@ -34,7 +38,9 @@ public sealed class OverlayForm : Form
     private bool _fetching;
     private bool _dragging;
     private Point _dragOffset;
-    private Font? _font;
+    private Font? _labelFont;
+    private Font? _mainFont;
+    private Font? _subFont;
 
     public OverlayForm()
     {
@@ -52,7 +58,6 @@ public sealed class OverlayForm : Form
         UpdateSize();
         ApplyStoredPosition();
         BuildContextMenu();
-        RunFirstRunSetup();
 
         _trayIcon.Icon = CreateTrayIcon();
         _trayIcon.Text = "ClaudeUsage";
@@ -98,27 +103,55 @@ public sealed class OverlayForm : Form
     {
         base.OnPaint(e);
         var graphics = e.Graphics;
+        graphics.SmoothingMode = SmoothingMode.AntiAlias;
         var scale = DeviceDpi / 96f;
-        var font = GetFont();
         var pad = ScaleValue(PadLu, scale);
-        var width = ClientSize.Width;
 
         using (var borderPen = new Pen(SeverityColors.Track))
+        using (var borderPath = RoundedRect(new Rectangle(0, 0, ClientSize.Width - 1, ClientSize.Height - 1), ScaleValue(RadiusLu, scale)))
         {
-            graphics.DrawRectangle(borderPen, 0, 0, width - 1, ClientSize.Height - 1);
+            graphics.DrawPath(borderPen, borderPath);
         }
 
+        DrawLogo(graphics, scale);
+
+        var contentX = pad + ScaleValue(LogoZoneLu, scale);
+        var contentWidth = ClientSize.Width - contentX - pad;
         var rows = _snapshot?.Rows;
+
         if (rows is null || rows.Count == 0)
         {
-            TextRenderer.DrawText(graphics, StatusMessage(), font, ClientRectangle, SeverityColors.MutedText,
+            var statusBounds = new Rectangle(contentX, 0, contentWidth, ClientSize.Height);
+            TextRenderer.DrawText(graphics, StatusMessage(), GetLabelFont(), statusBounds, SeverityColors.MutedText,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
-            return;
         }
-
-        for (var i = 0; i < rows.Count; i++)
+        else
         {
-            DrawRow(graphics, font, rows[i], i, pad, width, scale);
+            var mainIndex = Math.Max(IndexOfKind(rows, "session"), 0);
+            DrawMainRow(graphics, rows[mainIndex], mainIndex, contentX, pad, contentWidth, scale);
+
+            var others = new List<int>();
+            for (var i = 0; i < rows.Count && others.Count < 2; i++)
+            {
+                if (i != mainIndex)
+                {
+                    others.Add(i);
+                }
+            }
+
+            var subTop = pad + ScaleValue(MainRowLu, scale) + ScaleValue(GapLu, scale);
+            if (others.Count == 1)
+            {
+                DrawCompactCell(graphics, rows[others[0]], contentX, subTop, contentWidth, scale);
+            }
+            else if (others.Count == 2)
+            {
+                var cellGap = ScaleValue(8, scale);
+                var firstWidth = (contentWidth - cellGap) * 3 / 5;
+                var secondWidth = contentWidth - cellGap - firstWidth;
+                DrawCompactCell(graphics, rows[others[0]], contentX, subTop, firstWidth, scale);
+                DrawCompactCell(graphics, rows[others[1]], contentX + firstWidth + cellGap, subTop, secondWidth, scale);
+            }
         }
 
         if (_status != FetchStatus.Ok)
@@ -140,7 +173,9 @@ public sealed class OverlayForm : Form
             _trayIcon.Dispose();
             icon?.Dispose();
             _toolTip.Dispose();
-            _font?.Dispose();
+            _labelFont?.Dispose();
+            _mainFont?.Dispose();
+            _subFont?.Dispose();
         }
 
         base.Dispose(disposing);
@@ -232,20 +267,6 @@ public sealed class OverlayForm : Form
     }
 
     private static string ResetKey(string kind, DateTimeOffset resetsAt) => $"{kind}|{resetsAt.UtcTicks}";
-
-    private void RunFirstRunSetup()
-    {
-        if (!_settings.FirstRunDone)
-        {
-            _settings.AutoStart = StartupShortcut.TryCreate();
-            _settings.FirstRunDone = true;
-            SettingsStore.Save(_settings);
-        }
-        else if (_settings.AutoStart)
-        {
-            StartupShortcut.TryCreate();
-        }
-    }
 
     private void ShowOverlay()
     {
@@ -466,26 +487,6 @@ public sealed class OverlayForm : Form
         };
         menu.Items.Add(notifyItem);
 
-        var autoStartItem = new ToolStripMenuItem("Lancer au démarrage");
-        autoStartItem.Click += (_, _) =>
-        {
-            if (StartupShortcut.Exists())
-            {
-                StartupShortcut.Remove();
-                _settings.AutoStart = false;
-            }
-            else
-            {
-                _settings.AutoStart = StartupShortcut.TryCreate();
-            }
-
-            autoStartItem.Checked = _settings.AutoStart;
-            SettingsStore.Save(_settings);
-        };
-        menu.Items.Add(autoStartItem);
-
-        menu.Opening += (_, _) => autoStartItem.Checked = StartupShortcut.Exists();
-
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(new ToolStripMenuItem("Quitter", null, (_, _) => Close()));
         ContextMenuStrip = menu;
@@ -542,40 +543,108 @@ public sealed class OverlayForm : Form
         SettingsStore.Save(_settings);
     }
 
-    private void DrawRow(Graphics graphics, Font font, LimitRow row, int index, int pad, int width, float scale)
+    private void DrawMainRow(Graphics graphics, LimitRow row, int index, int x, int top, int width, float scale)
     {
-        var top = pad + ScaleValue(RowLu, scale) * index;
         var color = SeverityColors.ForLimit(row.Severity, row.Percent);
+        var labelFont = GetLabelFont();
+        var mainFont = GetMainFont();
         var countdown = index < _countdowns.Length ? _countdowns[index] : string.Empty;
         var percentText = $"{Math.Round(row.Percent)} %";
-        var separator = " · ";
-        var right = width - pad;
 
-        TextRenderer.DrawText(graphics, row.Label, font, new Point(pad, top), SeverityColors.Text, TextFormatFlags.NoPadding);
+        TextRenderer.DrawText(graphics, row.Label, labelFont, new Point(x, top + ScaleValue(3, scale)), SeverityColors.MutedText, TextFormatFlags.NoPadding);
+        var labelWidth = TextRenderer.MeasureText(graphics, row.Label, labelFont, Size.Empty, TextFormatFlags.NoPadding).Width;
+        TextRenderer.DrawText(graphics, percentText, mainFont, new Point(x + labelWidth + ScaleValue(7, scale), top), color, TextFormatFlags.NoPadding);
 
-        var countdownSize = TextRenderer.MeasureText(graphics, countdown, font, Size.Empty, TextFormatFlags.NoPadding);
-        TextRenderer.DrawText(graphics, countdown, font, new Point(right - countdownSize.Width, top), SeverityColors.MutedText, TextFormatFlags.NoPadding);
+        var countdownSize = TextRenderer.MeasureText(graphics, countdown, labelFont, Size.Empty, TextFormatFlags.NoPadding);
+        TextRenderer.DrawText(graphics, countdown, labelFont, new Point(x + width - countdownSize.Width, top + ScaleValue(3, scale)), SeverityColors.Text, TextFormatFlags.NoPadding);
 
-        var separatorSize = TextRenderer.MeasureText(graphics, separator, font, Size.Empty, TextFormatFlags.NoPadding);
-        var percentSize = TextRenderer.MeasureText(graphics, percentText, font, Size.Empty, TextFormatFlags.NoPadding);
-        var separatorX = right - countdownSize.Width - separatorSize.Width;
-        TextRenderer.DrawText(graphics, separator, font, new Point(separatorX, top), SeverityColors.MutedText, TextFormatFlags.NoPadding);
-        TextRenderer.DrawText(graphics, percentText, font, new Point(separatorX - percentSize.Width, top), color, TextFormatFlags.NoPadding);
+        var barTop = top + ScaleValue(18, scale);
+        var barHeight = Math.Max(ScaleValue(6, scale), 3);
+        DrawBar(graphics, x, barTop, width, barHeight, row.Percent, color);
+    }
 
-        var barTop = top + ScaleValue(BarOffsetLu, scale);
-        var barHeight = Math.Max(ScaleValue(BarLu, scale), 2);
-        var barWidth = width - pad * 2;
-        using (var trackBrush = new SolidBrush(SeverityColors.Track))
+    private void DrawCompactCell(Graphics graphics, LimitRow row, int x, int top, int width, float scale)
+    {
+        var color = SeverityColors.ForLimit(row.Severity, row.Percent);
+        var subFont = GetSubFont();
+        var percentText = $"{Math.Round(row.Percent)} %";
+        var labelSize = TextRenderer.MeasureText(graphics, row.Label, subFont, Size.Empty, TextFormatFlags.NoPadding);
+        var percentSize = TextRenderer.MeasureText(graphics, percentText, subFont, Size.Empty, TextFormatFlags.NoPadding);
+        var textY = top + ScaleValue(1, scale);
+
+        TextRenderer.DrawText(graphics, row.Label, subFont, new Point(x, textY), SeverityColors.MutedText, TextFormatFlags.NoPadding);
+        TextRenderer.DrawText(graphics, percentText, subFont, new Point(x + width - percentSize.Width, textY), color, TextFormatFlags.NoPadding);
+
+        var margin = ScaleValue(4, scale);
+        var barX = x + labelSize.Width + margin;
+        var barWidth = width - labelSize.Width - percentSize.Width - margin * 2;
+        if (barWidth <= ScaleValue(6, scale))
         {
-            graphics.FillRectangle(trackBrush, pad, barTop, barWidth, barHeight);
+            return;
         }
 
-        var fillWidth = (int)Math.Round(barWidth * Math.Clamp(row.Percent, 0, 100) / 100.0);
+        var barHeight = Math.Max(ScaleValue(4, scale), 2);
+        var barY = top + (ScaleValue(SubRowLu, scale) - barHeight) / 2;
+        DrawBar(graphics, barX, barY, barWidth, barHeight, row.Percent, color);
+    }
+
+    private static void DrawBar(Graphics graphics, int x, int y, int width, int height, double percent, Color color)
+    {
+        var radius = Math.Max(height / 2, 1);
+        using (var trackBrush = new SolidBrush(SeverityColors.Track))
+        using (var trackPath = RoundedRect(new Rectangle(x, y, width, height), radius))
+        {
+            graphics.FillPath(trackBrush, trackPath);
+        }
+
+        var fillWidth = (int)Math.Round(width * Math.Clamp(percent, 0, 100) / 100.0);
+        if (fillWidth > 0 && fillWidth < height)
+        {
+            fillWidth = height;
+        }
+
         if (fillWidth > 0)
         {
             using var fillBrush = new SolidBrush(color);
-            graphics.FillRectangle(fillBrush, pad, barTop, fillWidth, barHeight);
+            using var fillPath = RoundedRect(new Rectangle(x, y, fillWidth, height), radius);
+            graphics.FillPath(fillBrush, fillPath);
         }
+    }
+
+    private void DrawLogo(Graphics graphics, float scale)
+    {
+        var pad = ScaleValue(PadLu, scale);
+        var centerX = pad + ScaleValue(LogoZoneLu, scale) / 2f - 2f * scale;
+        var centerY = ClientSize.Height / 2f;
+        var outer = LogoRadiusLu * scale;
+        using var pen = new Pen(Color.FromArgb(217, 119, 87), Math.Max(2f * scale, 1.5f))
+        {
+            StartCap = LineCap.Round,
+            EndCap = LineCap.Round,
+        };
+
+        for (var i = 0; i < 12; i++)
+        {
+            var angle = Math.PI / 6 * i + Math.PI / 12;
+            var length = (float)(i % 2 == 0 ? outer : outer * 0.68);
+            var inner = outer * 0.25f;
+            var cos = (float)Math.Cos(angle);
+            var sin = (float)Math.Sin(angle);
+            graphics.DrawLine(pen, centerX + cos * inner, centerY + sin * inner, centerX + cos * length, centerY + sin * length);
+        }
+    }
+
+    private static int IndexOfKind(IReadOnlyList<LimitRow> rows, string kind)
+    {
+        for (var i = 0; i < rows.Count; i++)
+        {
+            if (rows[i].Kind == kind)
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     private string StatusMessage() => _status switch
@@ -589,8 +658,46 @@ public sealed class OverlayForm : Form
     private void UpdateSize()
     {
         var scale = DeviceDpi / 96f;
-        var rowCount = Math.Max(_snapshot?.Rows.Count ?? 3, 1);
-        ClientSize = new Size(ScaleValue(WidthLu, scale), ScaleValue(PadLu, scale) * 2 + ScaleValue(RowLu, scale) * rowCount);
+        var rows = _snapshot?.Rows;
+        var hasSubRow = rows is null || rows.Count > 1;
+        var height = ScaleValue(PadLu, scale) * 2 + ScaleValue(MainRowLu, scale);
+        if (hasSubRow)
+        {
+            height += ScaleValue(GapLu, scale) + ScaleValue(SubRowLu, scale);
+        }
+
+        ClientSize = new Size(ScaleValue(WidthLu, scale), height);
+        ApplyRoundedRegion();
+    }
+
+    private void ApplyRoundedRegion()
+    {
+        using var path = RoundedRect(new Rectangle(0, 0, Width, Height), ScaleValue(RadiusLu, DeviceDpi / 96f));
+        var previous = Region;
+        Region = new Region(path);
+        previous?.Dispose();
+    }
+
+    private static GraphicsPath RoundedRect(Rectangle bounds, int radius)
+    {
+        var path = new GraphicsPath();
+        if (radius <= 0 || bounds.Width <= 0 || bounds.Height <= 0)
+        {
+            path.AddRectangle(bounds);
+            return path;
+        }
+
+        var diameter = Math.Min(radius * 2, Math.Min(bounds.Width, bounds.Height));
+        var arc = new Rectangle(bounds.X, bounds.Y, diameter, diameter);
+        path.AddArc(arc, 180, 90);
+        arc.X = bounds.Right - diameter;
+        path.AddArc(arc, 270, 90);
+        arc.Y = bounds.Bottom - diameter;
+        path.AddArc(arc, 0, 90);
+        arc.X = bounds.X;
+        path.AddArc(arc, 90, 90);
+        path.CloseFigure();
+        return path;
     }
 
     private void ApplyStoredPosition()
@@ -629,11 +736,11 @@ public sealed class OverlayForm : Form
         return false;
     }
 
-    private Font GetFont()
-    {
-        _font ??= new Font("Segoe UI", 8.25f, FontStyle.Regular, GraphicsUnit.Point);
-        return _font;
-    }
+    private Font GetLabelFont() => _labelFont ??= new Font("Segoe UI", 8.25f, FontStyle.Regular, GraphicsUnit.Point);
+
+    private Font GetMainFont() => _mainFont ??= new Font("Segoe UI", 9.75f, FontStyle.Bold, GraphicsUnit.Point);
+
+    private Font GetSubFont() => _subFont ??= new Font("Segoe UI", 7.5f, FontStyle.Regular, GraphicsUnit.Point);
 
     private static int ScaleValue(int logical, float scale) => (int)Math.Round(logical * scale);
 }
