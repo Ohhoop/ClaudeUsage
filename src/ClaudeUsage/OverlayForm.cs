@@ -18,6 +18,7 @@ public sealed class OverlayForm : Form
     private const int EdgeLu = 12;
     private const int WsExToolWindow = 0x00000080;
     private const int WsExNoActivate = 0x08000000;
+    private const string DisplayName = "Claude Usage Widget";
 
     private readonly AppSettings _settings;
     private readonly string _naText = Loc.T("na");
@@ -58,7 +59,7 @@ public sealed class OverlayForm : Form
         DoubleBuffered = true;
         BackColor = Color.FromArgb(24, 24, 26);
         Opacity = _settings.OpacityPercent / 100.0;
-        Text = "ClaudeUsage";
+        Text = DisplayName;
 
         UpdateSize();
         ApplyStoredPosition();
@@ -70,7 +71,7 @@ public sealed class OverlayForm : Form
         }
 
         _trayIcon.Icon = CreateTrayIcon();
-        _trayIcon.Text = "ClaudeUsage";
+        _trayIcon.Text = DisplayName;
         _trayIcon.ContextMenuStrip = ContextMenuStrip;
         _trayIcon.Visible = true;
 
@@ -315,7 +316,7 @@ public sealed class OverlayForm : Form
 
             if (_notifiedResets.Add(ResetKey(row.Kind, target)) && _settings.NotifyOnReset)
             {
-                _trayIcon.ShowBalloonTip(5000, "ClaudeUsage", string.Format(CultureInfo.CurrentCulture, Loc.T("notification.reset"), row.Label), ToolTipIcon.Info);
+                _trayIcon.ShowBalloonTip(5000, DisplayName, string.Format(CultureInfo.CurrentCulture, Loc.T("notification.reset"), row.Label), ToolTipIcon.Info);
             }
 
             if (ResetWindow(row.Kind) is TimeSpan window)
@@ -607,7 +608,7 @@ public sealed class OverlayForm : Form
             SettingsStore.Save(_settings);
             if (notifyItem.Checked)
             {
-                _trayIcon.ShowBalloonTip(4000, "ClaudeUsage", Loc.T("notification.enabled"), ToolTipIcon.Info);
+                _trayIcon.ShowBalloonTip(4000, DisplayName, Loc.T("notification.enabled"), ToolTipIcon.Info);
             }
         };
         menu.Items.Add(notifyItem);
@@ -616,7 +617,7 @@ public sealed class OverlayForm : Form
         testItem.Click += (_, _) =>
         {
             var label = _snapshot?.Rows.Count > 0 ? _snapshot.Rows[0].Label : Loc.T("label.session");
-            _trayIcon.ShowBalloonTip(5000, "ClaudeUsage", string.Format(CultureInfo.CurrentCulture, Loc.T("notification.reset"), label), ToolTipIcon.Info);
+            _trayIcon.ShowBalloonTip(5000, DisplayName, string.Format(CultureInfo.CurrentCulture, Loc.T("notification.reset"), label), ToolTipIcon.Info);
         };
         menu.Items.Add(testItem);
 
