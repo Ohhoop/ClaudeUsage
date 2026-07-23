@@ -12,6 +12,12 @@ Limits shown:
 
 Each row shows a progress bar, the percentage used and the time left before the reset. The overlay only appears while a `claude` process is running (Claude desktop app or Claude Code) and hides itself otherwise.
 
+## Download
+
+Download the latest `ClaudeUsage.exe` from the [Releases page](https://github.com/Ohhoop/ClaudeUsage/releases/latest) — direct link: [ClaudeUsage.exe](https://github.com/Ohhoop/ClaudeUsage/releases/latest/download/ClaudeUsage.exe).
+
+It requires the [.NET Desktop Runtime 8.0](https://dotnet.microsoft.com/download/dotnet/8.0). Put the file anywhere and run it; the overlay appears while Claude or Claude Code is running. To start it automatically with Claude Code, use the "Launch with Claude Code" menu entry.
+
 ## How it works
 
 - Data comes from the account endpoint `https://api.anthropic.com/api/oauth/usage`, polled every 5 minutes and only while the overlay is visible. No model usage is consumed. On a 429 response the Retry-After delay is honored before any new attempt, and that deadline is stored in the settings so a restart of the application does not send a request until the pause has elapsed.
@@ -24,7 +30,9 @@ Each row shows a progress bar, the percentage used and the time left before the 
 - Windows 10 or newer
 - .NET Desktop Runtime 8.0
 
-## Build and install
+## Build it yourself
+
+Requires the [.NET SDK 8.0](https://dotnet.microsoft.com/download/dotnet/8.0) (or newer). Clone the repository, then either run the helper script:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File build.ps1
@@ -32,6 +40,12 @@ powershell -ExecutionPolicy Bypass -File build.ps1 -Install
 ```
 
 The first call runs the tests then publishes `dist\ClaudeUsage.exe`. The second also copies the executable to `%LOCALAPPDATA%\Programs\ClaudeUsage` and launches it; use that copy day to day so a rebuild never overwrites the running executable.
+
+Or publish directly without the script:
+
+```powershell
+dotnet publish src/ClaudeUsage -c Release -r win-x64 --no-self-contained /p:PublishSingleFile=true /p:DebugType=None -o dist
+```
 
 ## Usage
 
