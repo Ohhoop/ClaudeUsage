@@ -131,9 +131,15 @@ public sealed class OverlayForm : Form
 
         if (rows is null || rows.Count == 0)
         {
+            var message = StatusMessage();
+            if (_status == FetchStatus.RateLimited && _nextFetchAllowedUtc > DateTimeOffset.UtcNow)
+            {
+                message += Environment.NewLine + string.Format(CultureInfo.CurrentCulture, Loc.T("status.retryIn"), FormatWait(_nextFetchAllowedUtc - DateTimeOffset.UtcNow));
+            }
+
             var statusBounds = new Rectangle(contentX, 0, contentWidth, ClientSize.Height);
-            TextRenderer.DrawText(graphics, StatusMessage(), GetLabelFont(), statusBounds, SeverityColors.MutedText,
-                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            TextRenderer.DrawText(graphics, message, GetLabelFont(), statusBounds, SeverityColors.MutedText,
+                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.WordBreak);
         }
         else
         {
@@ -337,6 +343,18 @@ public sealed class OverlayForm : Form
 
     private static string ResetKey(string kind, DateTimeOffset resetsAt) => $"{kind}|{resetsAt.UtcTicks}";
 
+    private static string FormatWait(TimeSpan remaining)
+    {
+        if (remaining < TimeSpan.Zero)
+        {
+            remaining = TimeSpan.Zero;
+        }
+
+        return remaining.TotalHours >= 1
+            ? string.Format(CultureInfo.InvariantCulture, "{0}:{1:00}:{2:00}", (int)remaining.TotalHours, remaining.Minutes, remaining.Seconds)
+            : string.Format(CultureInfo.InvariantCulture, "{0}:{1:00}", remaining.Minutes, remaining.Seconds);
+    }
+
     private static TimeSpan? ResetWindow(string kind) => kind switch
     {
         "session" => TimeSpan.FromHours(5),
@@ -365,8 +383,16 @@ public sealed class OverlayForm : Form
 
     private async Task FetchNowAsync()
     {
-        if (_fetching || DateTimeOffset.UtcNow < _nextFetchAllowedUtc)
+        if (_fetching)
         {
+            return;
+        }
+
+        if (DateTimeOffset.UtcNow < _nextFetchAllowedUtc)
+        {
+            _status = FetchStatus.RateLimited;
+            UpdateToolTip();
+            Invalidate();
             return;
         }
 
@@ -425,6 +451,12 @@ public sealed class OverlayForm : Form
 
     private void OnCountdownTick(object? sender, EventArgs e)
     {
+        if (_status == FetchStatus.RateLimited && (_snapshot?.Rows.Count ?? 0) == 0)
+        {
+            Invalidate();
+            return;
+        }
+
         if (_snapshot is null)
         {
             return;
