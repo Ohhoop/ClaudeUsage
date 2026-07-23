@@ -226,17 +226,18 @@ public sealed class OverlayForm : Form
             }
         }
 
-        if (present && !_fetchTimer.Enabled)
+        var shouldShow = present && !_sentToTray;
+
+        if (shouldShow && !_fetchTimer.Enabled)
         {
             _fetchTimer.Start();
             _ = FetchNowAsync();
         }
-        else if (!present && _fetchTimer.Enabled)
+        else if (!shouldShow && _fetchTimer.Enabled)
         {
             _fetchTimer.Stop();
         }
 
-        var shouldShow = present && !_sentToTray;
         if (shouldShow && !_shown)
         {
             ShowVisual();
