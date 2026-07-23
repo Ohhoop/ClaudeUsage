@@ -2,6 +2,8 @@
 
 Overlay Windows discret, toujours au premier plan, affichant les limites d'usage de l'abonnement Claude. Le nom d'affichage est « Claude Usage Widget »; les identifiants internes (exécutable `ClaudeUsage.exe`, dossier de réglages `%APPDATA%\ClaudeUsage`) restent inchangés.
 
+![Aperçu de Claude Usage Widget](docs/overlay.png)
+
 Limites affichées :
 
 - Session 5 h
