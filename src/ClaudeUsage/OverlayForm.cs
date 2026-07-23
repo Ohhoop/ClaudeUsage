@@ -612,6 +612,14 @@ public sealed class OverlayForm : Form
         };
         menu.Items.Add(notifyItem);
 
+        var testItem = new ToolStripMenuItem(Loc.T("menu.testNotification"));
+        testItem.Click += (_, _) =>
+        {
+            var label = _snapshot?.Rows.Count > 0 ? _snapshot.Rows[0].Label : Loc.T("label.session");
+            _trayIcon.ShowBalloonTip(5000, "ClaudeUsage", string.Format(CultureInfo.CurrentCulture, Loc.T("notification.reset"), label), ToolTipIcon.Info);
+        };
+        menu.Items.Add(testItem);
+
         var hookItem = new ToolStripMenuItem(Loc.T("menu.launchWithClaude")) { Checked = SessionHook.Exists() };
         hookItem.Click += (_, _) =>
         {
