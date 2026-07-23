@@ -12,7 +12,7 @@ public sealed class AppSettings
 
     public bool NotifyOnReset { get; set; } = true;
 
-    public bool NotifyOnApproach { get; set; } = true;
+    public Dictionary<string, int> ApproachThresholds { get; set; } = new();
 
     public DateTimeOffset? RateLimitUntil { get; set; }
 }

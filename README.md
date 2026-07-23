@@ -37,7 +37,7 @@ Le premier appel exécute les tests puis publie `dist\ClaudeUsage.exe`. Le secon
 - Clic droit (sur l'overlay ou l'icône de zone de notification) : Actualiser, Opacité, Notifier au reset, Alerter à l'approche, Tester la notification, Lancer avec Claude Code, Réduire dans la zone de notification, Quitter.
 - « Réduire dans la zone de notification » masque la fenêtre tout en gardant l'icône et le suivi actifs; l'entrée devient « Afficher » pour la ramener. Un clic gauche sur l'icône de zone de notification bascule aussi l'affichage.
 - L'icône de zone de notification reflète l'usage : trois mini-barres colorées selon la sévérité, et son infobulle montre les pourcentages.
-- « Alerter à l'approche » notifie à 90 % puis au dépassement de chaque limite, en plus du reset.
+- « Alerter à l'approche » ouvre un sous-menu par limite (session, hebdo, modèle) où l'on choisit le seuil d'alerte en pourcentage (ou Désactivé). Au franchissement du seuil choisi puis à 100 %, une notification est émise, en plus du reset. Seuil par défaut : 90 % par limite.
 - Lors du glisser, la fenêtre s'accroche automatiquement aux bords de l'écran.
 - Le pourcentage reflète l'usage réel du compte : il ne change que lorsque vous utilisez Claude, ou retombe lors d'un reset. Le compte à rebours est calculé localement : arrivé à zéro, il attend une minute, déclenche la notification puis repart pour le cycle suivant, sans requête supplémentaire. L'interrogation ne sert qu'à rafraîchir les pourcentages, à rythme constant.
 - Les réglages sont conservés dans `%APPDATA%\ClaudeUsage\settings.json`.

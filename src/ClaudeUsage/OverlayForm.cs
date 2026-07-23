@@ -652,13 +652,20 @@ public sealed class OverlayForm : Form
         };
         menu.Items.Add(notifyItem);
 
-        var approachItem = new ToolStripMenuItem(Loc.T("menu.notifyApproach")) { Checked = _settings.NotifyOnApproach, CheckOnClick = true };
-        approachItem.CheckedChanged += (_, _) =>
+        var approachMenu = new ToolStripMenuItem(Loc.T("menu.notifyApproach"));
+        approachMenu.DropDownItems.Add(BuildThresholdSubmenu("session", Loc.T("label.session")));
+        approachMenu.DropDownItems.Add(BuildThresholdSubmenu("weekly_all", Loc.T("label.weekly")));
+        var scopedSubmenu = BuildThresholdSubmenu("weekly_scoped", Loc.T("label.model"));
+        approachMenu.DropDownItems.Add(scopedSubmenu);
+        approachMenu.DropDownOpening += (_, _) =>
         {
-            _settings.NotifyOnApproach = approachItem.Checked;
-            SettingsStore.Save(_settings);
+            var scopedRow = _snapshot?.Rows.FirstOrDefault(r => r.Kind == "weekly_scoped");
+            if (scopedRow is not null)
+            {
+                scopedSubmenu.Text = scopedRow.Label;
+            }
         };
-        menu.Items.Add(approachItem);
+        menu.Items.Add(approachMenu);
 
         var testItem = new ToolStripMenuItem(Loc.T("menu.testNotification"));
         testItem.Click += (_, _) =>
@@ -767,12 +774,48 @@ public sealed class OverlayForm : Form
         }
     }
 
+    private static readonly int[] ApproachOptions = { 0, 50, 60, 70, 75, 80, 85, 90, 95 };
+
+    private int ApproachThreshold(string kind)
+        => _settings.ApproachThresholds.TryGetValue(kind, out var value) ? value : 90;
+
+    private ToolStripMenuItem BuildThresholdSubmenu(string kind, string label)
+    {
+        var submenu = new ToolStripMenuItem(label);
+        foreach (var option in ApproachOptions)
+        {
+            var text = option == 0 ? Loc.T("menu.disabled") : $"{option} %";
+            var item = new ToolStripMenuItem(text) { Tag = option, Checked = ApproachThreshold(kind) == option };
+            item.Click += (_, _) =>
+            {
+                _settings.ApproachThresholds[kind] = option;
+                SettingsStore.Save(_settings);
+                foreach (ToolStripItem sibling in submenu.DropDownItems)
+                {
+                    if (sibling is ToolStripMenuItem menuItem)
+                    {
+                        menuItem.Checked = ReferenceEquals(menuItem, item);
+                    }
+                }
+            };
+            submenu.DropDownItems.Add(item);
+        }
+
+        return submenu;
+    }
+
     private void CheckApproach(UsageSnapshot snapshot)
     {
         var culture = CultureInfo.CurrentCulture;
         foreach (var row in snapshot.Rows)
         {
-            var level = row.Percent >= 100 ? 2 : row.Percent >= 90 ? 1 : 0;
+            var threshold = ApproachThreshold(row.Kind);
+            if (threshold <= 0)
+            {
+                continue;
+            }
+
+            var level = row.Percent >= 100 ? 2 : row.Percent >= threshold ? 1 : 0;
             if (level == 0)
             {
                 continue;
@@ -784,7 +827,7 @@ public sealed class OverlayForm : Form
                 continue;
             }
 
-            if (!_firstFetchSeeded || !_settings.NotifyOnApproach)
+            if (!_firstFetchSeeded)
             {
                 continue;
             }
