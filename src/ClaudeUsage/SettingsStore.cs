@@ -11,6 +11,8 @@ public sealed class AppSettings
     public int OpacityPercent { get; set; } = 85;
 
     public bool NotifyOnReset { get; set; } = true;
+
+    public DateTimeOffset? RateLimitUntil { get; set; }
 }
 
 public static class SettingsStore

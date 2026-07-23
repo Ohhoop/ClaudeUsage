@@ -49,6 +49,7 @@ public sealed class OverlayForm : Form
     public OverlayForm()
     {
         _settings = SettingsStore.Load();
+        _nextFetchAllowedUtc = _settings.RateLimitUntil ?? DateTimeOffset.MinValue;
 
         FormBorderStyle = FormBorderStyle.None;
         StartPosition = FormStartPosition.Manual;
@@ -381,6 +382,11 @@ public sealed class OverlayForm : Form
                 UpdateResetTargets(outcome.Snapshot);
                 RefreshCountdowns();
                 UpdateSize();
+                if (_settings.RateLimitUntil is not null)
+                {
+                    _settings.RateLimitUntil = null;
+                    SettingsStore.Save(_settings);
+                }
             }
             else if (outcome.Status == FetchStatus.RateLimited)
             {
@@ -390,12 +396,14 @@ public sealed class OverlayForm : Form
                 {
                     delay = TimeSpan.FromSeconds(30);
                 }
-                else if (delay > TimeSpan.FromHours(1))
+                else if (delay > TimeSpan.FromHours(6))
                 {
-                    delay = TimeSpan.FromHours(1);
+                    delay = TimeSpan.FromHours(6);
                 }
 
                 _nextFetchAllowedUtc = DateTimeOffset.UtcNow + delay;
+                _settings.RateLimitUntil = _nextFetchAllowedUtc;
+                SettingsStore.Save(_settings);
             }
             else
             {
