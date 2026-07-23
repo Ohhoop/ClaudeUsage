@@ -12,6 +12,8 @@ public sealed class AppSettings
 
     public bool NotifyOnReset { get; set; } = true;
 
+    public bool NotifyOnApproach { get; set; } = true;
+
     public DateTimeOffset? RateLimitUntil { get; set; }
 }
 

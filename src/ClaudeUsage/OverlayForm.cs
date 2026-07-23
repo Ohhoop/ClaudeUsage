@@ -29,6 +29,8 @@ public sealed class OverlayForm : Form
     private readonly NotifyIcon _trayIcon = new();
     private readonly Dictionary<string, DateTimeOffset> _resetAt = new();
     private readonly HashSet<string> _notifiedResets = new();
+    private readonly HashSet<string> _approachNotified = new();
+    private bool _firstFetchSeeded;
 
     private UsageSnapshot? _snapshot;
     private FetchStatus _status = FetchStatus.Ok;
@@ -70,9 +72,16 @@ public sealed class OverlayForm : Form
             SessionHook.TryEnable();
         }
 
-        _trayIcon.Icon = CreateTrayIcon();
+        _trayIcon.Icon = BuildTrayIcon(null);
         _trayIcon.Text = DisplayName;
         _trayIcon.ContextMenuStrip = ContextMenuStrip;
+        _trayIcon.MouseClick += (_, args) =>
+        {
+            if (args.Button == MouseButtons.Left)
+            {
+                ToggleTray();
+            }
+        };
         _trayIcon.Visible = true;
 
         _presenceTimer.Interval = 200;
@@ -407,8 +416,11 @@ public sealed class OverlayForm : Form
                 _lastSuccessUtc = DateTimeOffset.UtcNow;
                 _status = FetchStatus.Ok;
                 UpdateResetTargets(outcome.Snapshot);
+                CheckApproach(outcome.Snapshot);
+                _firstFetchSeeded = true;
                 RefreshCountdowns();
                 UpdateSize();
+                UpdateTrayIcon();
                 if (_settings.RateLimitUntil is not null)
                 {
                     _settings.RateLimitUntil = null;
@@ -559,8 +571,35 @@ public sealed class OverlayForm : Form
         if (_dragging)
         {
             var screenPoint = PointToScreen(e.Location);
-            Location = new Point(screenPoint.X - _dragOffset.X, screenPoint.Y - _dragOffset.Y);
+            Location = SnapToEdges(new Point(screenPoint.X - _dragOffset.X, screenPoint.Y - _dragOffset.Y));
         }
+    }
+
+    private Point SnapToEdges(Point location)
+    {
+        var snap = ScaleValue(12, DeviceDpi / 96f);
+        var center = new Point(location.X + Width / 2, location.Y + Height / 2);
+        var area = Screen.FromPoint(center).WorkingArea;
+
+        if (Math.Abs(location.X - area.Left) <= snap)
+        {
+            location.X = area.Left;
+        }
+        else if (Math.Abs(area.Right - (location.X + Width)) <= snap)
+        {
+            location.X = area.Right - Width;
+        }
+
+        if (Math.Abs(location.Y - area.Top) <= snap)
+        {
+            location.Y = area.Top;
+        }
+        else if (Math.Abs(area.Bottom - (location.Y + Height)) <= snap)
+        {
+            location.Y = area.Bottom - Height;
+        }
+
+        return location;
     }
 
     protected override void OnMouseUp(MouseEventArgs e)
@@ -613,6 +652,14 @@ public sealed class OverlayForm : Form
         };
         menu.Items.Add(notifyItem);
 
+        var approachItem = new ToolStripMenuItem(Loc.T("menu.notifyApproach")) { Checked = _settings.NotifyOnApproach, CheckOnClick = true };
+        approachItem.CheckedChanged += (_, _) =>
+        {
+            _settings.NotifyOnApproach = approachItem.Checked;
+            SettingsStore.Save(_settings);
+        };
+        menu.Items.Add(approachItem);
+
         var testItem = new ToolStripMenuItem(Loc.T("menu.testNotification"));
         testItem.Click += (_, _) =>
         {
@@ -638,18 +685,7 @@ public sealed class OverlayForm : Form
         menu.Items.Add(hookItem);
 
         var trayItem = new ToolStripMenuItem(Loc.T("menu.sendToTray"));
-        trayItem.Click += (_, _) =>
-        {
-            _sentToTray = !_sentToTray;
-            if (_sentToTray)
-            {
-                HideVisual();
-            }
-            else
-            {
-                ShowVisual();
-            }
-        };
+        trayItem.Click += (_, _) => ToggleTray();
         menu.Items.Add(trayItem);
 
         menu.Opening += (_, _) =>
@@ -663,20 +699,60 @@ public sealed class OverlayForm : Form
         ContextMenuStrip = menu;
     }
 
-    private static Icon CreateTrayIcon()
+    private void ToggleTray()
+    {
+        _sentToTray = !_sentToTray;
+        if (_sentToTray)
+        {
+            HideVisual();
+        }
+        else
+        {
+            ShowVisual();
+        }
+    }
+
+    private void UpdateTrayIcon()
+    {
+        var rows = _snapshot?.Rows;
+        var newIcon = BuildTrayIcon(rows);
+        var previous = _trayIcon.Icon;
+        _trayIcon.Icon = newIcon;
+        previous?.Dispose();
+
+        if (rows is not null && rows.Count > 0)
+        {
+            var parts = rows.Select(r => $"{Math.Round(r.Percent)}%");
+            var text = DisplayName + Environment.NewLine + string.Join(" · ", parts);
+            _trayIcon.Text = text.Length > 63 ? text.Substring(0, 63) : text;
+        }
+        else
+        {
+            _trayIcon.Text = DisplayName;
+        }
+    }
+
+    private static Icon BuildTrayIcon(IReadOnlyList<LimitRow>? rows)
     {
         using var bitmap = new Bitmap(16, 16);
         using (var graphics = Graphics.FromImage(bitmap))
         {
-            graphics.Clear(Color.FromArgb(24, 24, 26));
+            graphics.Clear(Color.Transparent);
+            var tops = new[] { 2, 7, 12 };
             using var trackBrush = new SolidBrush(SeverityColors.Track);
-            using var fillBrush = new SolidBrush(SeverityColors.Neutral);
-            graphics.FillRectangle(trackBrush, 2, 2, 12, 3);
-            graphics.FillRectangle(fillBrush, 2, 2, 9, 3);
-            graphics.FillRectangle(trackBrush, 2, 7, 12, 3);
-            graphics.FillRectangle(fillBrush, 2, 7, 4, 3);
-            graphics.FillRectangle(trackBrush, 2, 12, 12, 3);
-            graphics.FillRectangle(fillBrush, 2, 12, 6, 3);
+            for (var i = 0; i < tops.Length; i++)
+            {
+                var hasRow = rows is not null && i < rows.Count;
+                var percent = hasRow ? Math.Clamp(rows![i].Percent, 0, 100) : 0;
+                var color = hasRow ? SeverityColors.ForLimit(rows![i].Severity, rows[i].Percent) : SeverityColors.Track;
+                graphics.FillRectangle(trackBrush, 2, tops[i], 12, 3);
+                var fillWidth = (int)Math.Round(12 * percent / 100.0);
+                if (fillWidth > 0)
+                {
+                    using var fillBrush = new SolidBrush(color);
+                    graphics.FillRectangle(fillBrush, 2, tops[i], fillWidth, 3);
+                }
+            }
         }
 
         var handle = bitmap.GetHicon();
@@ -688,6 +764,35 @@ public sealed class OverlayForm : Form
         finally
         {
             DestroyIcon(handle);
+        }
+    }
+
+    private void CheckApproach(UsageSnapshot snapshot)
+    {
+        var culture = CultureInfo.CurrentCulture;
+        foreach (var row in snapshot.Rows)
+        {
+            var level = row.Percent >= 100 ? 2 : row.Percent >= 90 ? 1 : 0;
+            if (level == 0)
+            {
+                continue;
+            }
+
+            var anchor = EffectiveReset(row)?.UtcTicks ?? 0;
+            if (!_approachNotified.Add($"{row.Kind}|{anchor}|{level}"))
+            {
+                continue;
+            }
+
+            if (!_firstFetchSeeded || !_settings.NotifyOnApproach)
+            {
+                continue;
+            }
+
+            var message = level == 2
+                ? string.Format(culture, Loc.T("notification.exceeded"), row.Label)
+                : string.Format(culture, Loc.T("notification.approaching"), row.Label, Math.Round(row.Percent));
+            _trayIcon.ShowBalloonTip(6000, DisplayName, message, level == 2 ? ToolTipIcon.Warning : ToolTipIcon.Info);
         }
     }
 
@@ -741,6 +846,7 @@ public sealed class OverlayForm : Form
         var percentText = $"{Math.Round(row.Percent)} %";
         var countdown = index < _countdowns.Length ? _countdowns[index] : string.Empty;
         var percentSize = TextRenderer.MeasureText(graphics, percentText, subFont, Size.Empty, TextFormatFlags.NoPadding);
+        var percentSlot = TextRenderer.MeasureText(graphics, "100 %", subFont, Size.Empty, TextFormatFlags.NoPadding).Width;
         var countdownSize = TextRenderer.MeasureText(graphics, countdown, subFont, Size.Empty, TextFormatFlags.NoPadding);
 
         TextRenderer.DrawText(graphics, row.Label, subFont, new Point(x, top), SeverityColors.MutedText, TextFormatFlags.NoPadding);
@@ -749,7 +855,7 @@ public sealed class OverlayForm : Form
         var margin = ScaleValue(6, scale);
         var barHeight = Math.Max(ScaleValue(4, scale), 2);
         var barY = top + ScaleValue(14, scale);
-        var barWidth = width - percentSize.Width - margin;
+        var barWidth = width - percentSlot - margin;
         if (barWidth > 0)
         {
             DrawBar(graphics, x, barY, barWidth, barHeight, row.Percent, color);
