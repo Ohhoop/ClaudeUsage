@@ -27,7 +27,7 @@ public sealed class OverlayForm : Form
     private readonly System.Windows.Forms.Timer _tickTimer = new();
     private readonly ToolTip _toolTip = new();
     private readonly NotifyIcon _trayIcon = new();
-    private readonly HashSet<string> _notifiedResets = new();
+    private readonly Dictionary<string, DateTimeOffset> _lastResets = new();
 
     private UsageSnapshot? _snapshot;
     private FetchStatus _status = FetchStatus.Ok;
@@ -37,6 +37,7 @@ public sealed class OverlayForm : Form
     private bool _allowVisible;
     private bool _shown;
     private bool _fetching;
+    private bool _sentToTray;
     private bool _claudeSeen;
     private DateTimeOffset? _claudeAbsentSince;
     private bool _dragging;
@@ -225,87 +226,86 @@ public sealed class OverlayForm : Form
             }
         }
 
-        if (present && !_shown)
+        if (present && !_fetchTimer.Enabled)
         {
-            ShowOverlay();
+            _fetchTimer.Start();
+            _ = FetchNowAsync();
         }
-        else if (!present && _shown)
+        else if (!present && _fetchTimer.Enabled)
         {
-            HideOverlay();
+            _fetchTimer.Stop();
+        }
+
+        var shouldShow = present && !_sentToTray;
+        if (shouldShow && !_shown)
+        {
+            ShowVisual();
+        }
+        else if (!shouldShow && _shown)
+        {
+            HideVisual();
         }
 
         if (_shown)
         {
             EnsureOnScreen();
         }
-
-        CheckResetNotifications();
     }
 
-    private void CheckResetNotifications()
+    private void DetectResetsAndNotify(UsageSnapshot snapshot)
     {
-        var rows = _snapshot?.Rows;
-        if (rows is null)
+        foreach (var row in snapshot.Rows)
         {
-            return;
-        }
-
-        var now = DateTimeOffset.UtcNow;
-        foreach (var row in rows)
-        {
-            if (row.ResetsAt is not DateTimeOffset resetsAt || now < resetsAt)
+            if (row.ResetsAt is not DateTimeOffset resetsAt)
             {
                 continue;
             }
 
-            if (!_notifiedResets.Add(ResetKey(row.Kind, resetsAt)))
-            {
-                continue;
-            }
-
-            if (_settings.NotifyOnReset)
+            if (_lastResets.TryGetValue(row.Kind, out var previous)
+                && resetsAt - previous > TimeSpan.FromMinutes(1)
+                && _settings.NotifyOnReset)
             {
                 _trayIcon.ShowBalloonTip(5000, "ClaudeUsage", string.Format(CultureInfo.CurrentCulture, Loc.T("notification.reset"), row.Label), ToolTipIcon.Info);
             }
+
+            _lastResets[row.Kind] = resetsAt;
         }
     }
 
-    private void SeedNotifiedResets()
+    private void ScheduleNextFetch(UsageSnapshot snapshot)
     {
-        var rows = _snapshot?.Rows;
-        if (rows is null)
-        {
-            return;
-        }
-
         var now = DateTimeOffset.UtcNow;
-        foreach (var row in rows)
+        var due = false;
+        foreach (var row in snapshot.Rows)
         {
-            if (row.ResetsAt is DateTimeOffset resetsAt && now >= resetsAt)
+            if (row.ResetsAt is DateTimeOffset resetsAt && resetsAt <= now)
             {
-                _notifiedResets.Add(ResetKey(row.Kind, resetsAt));
+                due = true;
+                break;
             }
         }
+
+        var interval = due ? 30_000 : 120_000;
+        if (_fetchTimer.Interval != interval)
+        {
+            _fetchTimer.Interval = interval;
+        }
     }
 
-    private static string ResetKey(string kind, DateTimeOffset resetsAt) => $"{kind}|{resetsAt.UtcTicks}";
-
-    private void ShowOverlay()
+    private void ShowVisual()
     {
         _shown = true;
         _allowVisible = true;
         Show();
         TopMost = false;
         TopMost = true;
-        _fetchTimer.Start();
         _tickTimer.Start();
-        _ = FetchNowAsync();
+        Invalidate();
     }
 
-    private void HideOverlay()
+    private void HideVisual()
     {
         _shown = false;
-        _fetchTimer.Stop();
         _tickTimer.Stop();
         Hide();
     }
@@ -323,12 +323,13 @@ public sealed class OverlayForm : Form
             var outcome = await UsageClient.FetchAsync();
             if (outcome.Status == FetchStatus.Ok && outcome.Snapshot is not null)
             {
+                DetectResetsAndNotify(outcome.Snapshot);
                 _snapshot = outcome.Snapshot;
                 _lastSuccessUtc = DateTimeOffset.UtcNow;
                 _status = FetchStatus.Ok;
-                SeedNotifiedResets();
                 RefreshCountdowns();
                 UpdateSize();
+                ScheduleNextFetch(outcome.Snapshot);
             }
             else if (outcome.Status == FetchStatus.RateLimited)
             {
@@ -525,6 +526,10 @@ public sealed class OverlayForm : Form
         {
             _settings.NotifyOnReset = notifyItem.Checked;
             SettingsStore.Save(_settings);
+            if (notifyItem.Checked)
+            {
+                _trayIcon.ShowBalloonTip(4000, "ClaudeUsage", Loc.T("notification.enabled"), ToolTipIcon.Info);
+            }
         };
         menu.Items.Add(notifyItem);
 
@@ -543,7 +548,27 @@ public sealed class OverlayForm : Form
             hookItem.Checked = SessionHook.Exists();
         };
         menu.Items.Add(hookItem);
-        menu.Opening += (_, _) => hookItem.Checked = SessionHook.Exists();
+
+        var trayItem = new ToolStripMenuItem(Loc.T("menu.sendToTray"));
+        trayItem.Click += (_, _) =>
+        {
+            _sentToTray = !_sentToTray;
+            if (_sentToTray)
+            {
+                HideVisual();
+            }
+            else
+            {
+                ShowVisual();
+            }
+        };
+        menu.Items.Add(trayItem);
+
+        menu.Opening += (_, _) =>
+        {
+            hookItem.Checked = SessionHook.Exists();
+            trayItem.Text = _sentToTray ? Loc.T("menu.show") : Loc.T("menu.sendToTray");
+        };
 
         menu.Items.Add(new ToolStripSeparator());
         menu.Items.Add(new ToolStripMenuItem(Loc.T("menu.quit"), null, (_, _) => Close()));

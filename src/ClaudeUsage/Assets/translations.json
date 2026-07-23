@@ -22,8 +22,11 @@
     "menu.opacity": "Opacity",
     "menu.notifyOnReset": "Notify on limit reset",
     "menu.launchWithClaude": "Launch with Claude Code",
+    "menu.sendToTray": "Send to tray",
+    "menu.show": "Show",
     "menu.quit": "Quit",
-    "notification.reset": "{0} limit reset"
+    "notification.reset": "{0} limit reset",
+    "notification.enabled": "Notifications enabled"
   },
   "fr": {
     "label.session": "Session courante (5h)",
@@ -46,10 +49,13 @@
     "tooltip.stale": "Données périmées, nouvelle tentative en cours",
     "menu.refresh": "Actualiser",
     "menu.opacity": "Opacité",
-    "menu.notifyOnReset": "Notifier au reset",
+    "menu.notifyOnReset": "Notifier au reset de limite",
     "menu.launchWithClaude": "Lancer avec Claude Code",
+    "menu.sendToTray": "Réduire dans la zone de notification",
+    "menu.show": "Afficher",
     "menu.quit": "Quitter",
-    "notification.reset": "Limite {0} réinitialisée"
+    "notification.reset": "Limite {0} réinitialisée",
+    "notification.enabled": "Notifications activées"
   },
   "de": {
     "label.session": "Aktuelle Sitzung (5h)",
@@ -72,10 +78,13 @@
     "tooltip.stale": "Veraltete Daten, neuer Versuch läuft",
     "menu.refresh": "Aktualisieren",
     "menu.opacity": "Deckkraft",
-    "menu.notifyOnReset": "Bei Reset benachrichtigen",
+    "menu.notifyOnReset": "Bei Limit-Reset benachrichtigen",
     "menu.launchWithClaude": "Mit Claude Code starten",
+    "menu.sendToTray": "In den Infobereich minimieren",
+    "menu.show": "Anzeigen",
     "menu.quit": "Beenden",
-    "notification.reset": "Limit {0} zurückgesetzt"
+    "notification.reset": "Limit {0} zurückgesetzt",
+    "notification.enabled": "Benachrichtigungen aktiviert"
   },
   "es": {
     "label.session": "Sesión actual (5h)",
@@ -98,10 +107,13 @@
     "tooltip.stale": "Datos obsoletos, reintentando",
     "menu.refresh": "Actualizar",
     "menu.opacity": "Opacidad",
-    "menu.notifyOnReset": "Notificar al restablecer",
+    "menu.notifyOnReset": "Notificar al restablecer el límite",
     "menu.launchWithClaude": "Iniciar con Claude Code",
+    "menu.sendToTray": "Enviar a la bandeja",
+    "menu.show": "Mostrar",
     "menu.quit": "Salir",
-    "notification.reset": "Límite {0} restablecido"
+    "notification.reset": "Límite {0} restablecido",
+    "notification.enabled": "Notificaciones activadas"
   },
   "it": {
     "label.session": "Sessione corrente (5h)",
@@ -124,10 +136,13 @@
     "tooltip.stale": "Dati obsoleti, nuovo tentativo in corso",
     "menu.refresh": "Aggiorna",
     "menu.opacity": "Opacità",
-    "menu.notifyOnReset": "Notifica al reset",
+    "menu.notifyOnReset": "Notifica al reset del limite",
     "menu.launchWithClaude": "Avvia con Claude Code",
+    "menu.sendToTray": "Riduci nell'area di notifica",
+    "menu.show": "Mostra",
     "menu.quit": "Esci",
-    "notification.reset": "Limite {0} azzerato"
+    "notification.reset": "Limite {0} azzerato",
+    "notification.enabled": "Notifiche attivate"
   },
   "pt": {
     "label.session": "Sessão atual (5h)",
@@ -150,10 +165,13 @@
     "tooltip.stale": "Dados desatualizados, tentando novamente",
     "menu.refresh": "Atualizar",
     "menu.opacity": "Opacidade",
-    "menu.notifyOnReset": "Notificar ao redefinir",
+    "menu.notifyOnReset": "Notificar ao redefinir o limite",
     "menu.launchWithClaude": "Iniciar com o Claude Code",
+    "menu.sendToTray": "Enviar para a bandeja",
+    "menu.show": "Mostrar",
     "menu.quit": "Sair",
-    "notification.reset": "Limite {0} redefinido"
+    "notification.reset": "Limite {0} redefinido",
+    "notification.enabled": "Notificações ativadas"
   },
   "pt-PT": {
     "label.session": "Sessão atual (5h)",
@@ -176,10 +194,13 @@
     "tooltip.stale": "Dados desatualizados, a tentar novamente",
     "menu.refresh": "Atualizar",
     "menu.opacity": "Opacidade",
-    "menu.notifyOnReset": "Notificar ao redefinir",
+    "menu.notifyOnReset": "Notificar ao redefinir o limite",
     "menu.launchWithClaude": "Iniciar com o Claude Code",
+    "menu.sendToTray": "Enviar para a bandeja",
+    "menu.show": "Mostrar",
     "menu.quit": "Sair",
-    "notification.reset": "Limite {0} redefinido"
+    "notification.reset": "Limite {0} redefinido",
+    "notification.enabled": "Notificações ativadas"
   },
   "nl": {
     "label.session": "Huidige sessie (5u)",
@@ -202,10 +223,13 @@
     "tooltip.stale": "Verouderde gegevens, opnieuw proberen",
     "menu.refresh": "Vernieuwen",
     "menu.opacity": "Dekking",
-    "menu.notifyOnReset": "Melden bij reset",
+    "menu.notifyOnReset": "Melden bij limietreset",
     "menu.launchWithClaude": "Starten met Claude Code",
+    "menu.sendToTray": "Naar systeemvak",
+    "menu.show": "Weergeven",
     "menu.quit": "Afsluiten",
-    "notification.reset": "Limiet {0} gereset"
+    "notification.reset": "Limiet {0} gereset",
+    "notification.enabled": "Meldingen ingeschakeld"
   },
   "sv": {
     "label.session": "Aktuell session (5 h)",
@@ -228,10 +252,13 @@
     "tooltip.stale": "Inaktuella data, försöker igen",
     "menu.refresh": "Uppdatera",
     "menu.opacity": "Opacitet",
-    "menu.notifyOnReset": "Avisera vid återställning",
+    "menu.notifyOnReset": "Avisera när gränsen återställs",
     "menu.launchWithClaude": "Starta med Claude Code",
+    "menu.sendToTray": "Minimera till meddelandefältet",
+    "menu.show": "Visa",
     "menu.quit": "Avsluta",
-    "notification.reset": "Gränsen {0} återställd"
+    "notification.reset": "Gränsen {0} återställd",
+    "notification.enabled": "Aviseringar aktiverade"
   },
   "da": {
     "label.session": "Aktuel session (5t)",
@@ -254,10 +281,13 @@
     "tooltip.stale": "Forældede data, prøver igen",
     "menu.refresh": "Opdater",
     "menu.opacity": "Uigennemsigtighed",
-    "menu.notifyOnReset": "Giv besked ved nulstilling",
+    "menu.notifyOnReset": "Giv besked, når grænsen nulstilles",
     "menu.launchWithClaude": "Start med Claude Code",
+    "menu.sendToTray": "Minimer til meddelelsesområdet",
+    "menu.show": "Vis",
     "menu.quit": "Afslut",
-    "notification.reset": "Grænsen {0} nulstillet"
+    "notification.reset": "Grænsen {0} nulstillet",
+    "notification.enabled": "Notifikationer aktiveret"
   },
   "nb": {
     "label.session": "Gjeldende økt (5t)",
@@ -280,10 +310,13 @@
     "tooltip.stale": "Utdaterte data, prøver på nytt",
     "menu.refresh": "Oppdater",
     "menu.opacity": "Gjennomsiktighet",
-    "menu.notifyOnReset": "Varsle ved tilbakestilling",
+    "menu.notifyOnReset": "Varsle når grensen tilbakestilles",
     "menu.launchWithClaude": "Start med Claude Code",
+    "menu.sendToTray": "Legg i systemstatusfeltet",
+    "menu.show": "Vis",
     "menu.quit": "Avslutt",
-    "notification.reset": "Grensen {0} tilbakestilt"
+    "notification.reset": "Grensen {0} tilbakestilt",
+    "notification.enabled": "Varsler aktivert"
   },
   "no": {
     "label.session": "Gjeldende økt (5t)",
@@ -306,10 +339,13 @@
     "tooltip.stale": "Utdaterte data, prøver på nytt",
     "menu.refresh": "Oppdater",
     "menu.opacity": "Gjennomsiktighet",
-    "menu.notifyOnReset": "Varsle ved tilbakestilling",
+    "menu.notifyOnReset": "Varsle når grensen tilbakestilles",
     "menu.launchWithClaude": "Start med Claude Code",
+    "menu.sendToTray": "Legg i systemstatusfeltet",
+    "menu.show": "Vis",
     "menu.quit": "Avslutt",
-    "notification.reset": "Grensen {0} tilbakestilt"
+    "notification.reset": "Grensen {0} tilbakestilt",
+    "notification.enabled": "Varsler aktivert"
   },
   "fi": {
     "label.session": "Nykyinen istunto (5 t)",
@@ -332,10 +368,13 @@
     "tooltip.stale": "Vanhentuneet tiedot, yritetään uudelleen",
     "menu.refresh": "Päivitä",
     "menu.opacity": "Peittävyys",
-    "menu.notifyOnReset": "Ilmoita nollauksesta",
+    "menu.notifyOnReset": "Ilmoita rajan nollauksesta",
     "menu.launchWithClaude": "Käynnistä Claude Coden kanssa",
+    "menu.sendToTray": "Pienennä ilmaisinalueelle",
+    "menu.show": "Näytä",
     "menu.quit": "Lopeta",
-    "notification.reset": "Raja {0} nollattu"
+    "notification.reset": "Raja {0} nollattu",
+    "notification.enabled": "Ilmoitukset käytössä"
   },
   "pl": {
     "label.session": "Bieżąca sesja (5 h)",
@@ -358,10 +397,13 @@
     "tooltip.stale": "Nieaktualne dane, ponawianie",
     "menu.refresh": "Odśwież",
     "menu.opacity": "Nieprzezroczystość",
-    "menu.notifyOnReset": "Powiadom przy resecie",
+    "menu.notifyOnReset": "Powiadom przy resecie limitu",
     "menu.launchWithClaude": "Uruchamiaj z Claude Code",
+    "menu.sendToTray": "Zwiń do zasobnika",
+    "menu.show": "Pokaż",
     "menu.quit": "Zakończ",
-    "notification.reset": "Limit {0} zresetowany"
+    "notification.reset": "Limit {0} zresetowany",
+    "notification.enabled": "Powiadomienia włączone"
   },
   "cs": {
     "label.session": "Aktuální relace (5 h)",
@@ -384,10 +426,13 @@
     "tooltip.stale": "Zastaralá data, opakování",
     "menu.refresh": "Aktualizovat",
     "menu.opacity": "Neprůhlednost",
-    "menu.notifyOnReset": "Upozornit při resetu",
+    "menu.notifyOnReset": "Upozornit při resetu limitu",
     "menu.launchWithClaude": "Spouštět s Claude Code",
+    "menu.sendToTray": "Skrýt do oznamovací oblasti",
+    "menu.show": "Zobrazit",
     "menu.quit": "Ukončit",
-    "notification.reset": "Limit {0} resetován"
+    "notification.reset": "Limit {0} resetován",
+    "notification.enabled": "Oznámení zapnuta"
   },
   "sk": {
     "label.session": "Aktuálna relácia (5 h)",
@@ -410,10 +455,13 @@
     "tooltip.stale": "Zastarané údaje, opakovanie",
     "menu.refresh": "Obnoviť",
     "menu.opacity": "Nepriehľadnosť",
-    "menu.notifyOnReset": "Upozorniť pri resete",
+    "menu.notifyOnReset": "Upozorniť pri resete limitu",
     "menu.launchWithClaude": "Spúšťať s Claude Code",
+    "menu.sendToTray": "Skryť do oblasti oznámení",
+    "menu.show": "Zobraziť",
     "menu.quit": "Ukončiť",
-    "notification.reset": "Limit {0} resetovaný"
+    "notification.reset": "Limit {0} resetovaný",
+    "notification.enabled": "Oznámenia zapnuté"
   },
   "hu": {
     "label.session": "Aktuális munkamenet (5 ó)",
@@ -436,10 +484,13 @@
     "tooltip.stale": "Elavult adatok, újrapróbálkozás",
     "menu.refresh": "Frissítés",
     "menu.opacity": "Átlátszatlanság",
-    "menu.notifyOnReset": "Értesítés visszaálláskor",
+    "menu.notifyOnReset": "Értesítés a korlát visszaállásakor",
     "menu.launchWithClaude": "Indítás a Claude Code-dal",
+    "menu.sendToTray": "Tálcára helyezés",
+    "menu.show": "Megjelenítés",
     "menu.quit": "Kilépés",
-    "notification.reset": "A(z) {0} korlát visszaállt"
+    "notification.reset": "A(z) {0} korlát visszaállt",
+    "notification.enabled": "Értesítések bekapcsolva"
   },
   "ro": {
     "label.session": "Sesiune curentă (5 h)",
@@ -462,10 +513,13 @@
     "tooltip.stale": "Date învechite, se reîncearcă",
     "menu.refresh": "Actualizare",
     "menu.opacity": "Opacitate",
-    "menu.notifyOnReset": "Notificare la resetare",
+    "menu.notifyOnReset": "Notificare la resetarea limitei",
     "menu.launchWithClaude": "Pornire cu Claude Code",
+    "menu.sendToTray": "Trimite în bara de sistem",
+    "menu.show": "Afișează",
     "menu.quit": "Ieșire",
-    "notification.reset": "Limita {0} resetată"
+    "notification.reset": "Limita {0} resetată",
+    "notification.enabled": "Notificări activate"
   },
   "bg": {
     "label.session": "Текуща сесия (5 ч)",
@@ -488,10 +542,13 @@
     "tooltip.stale": "Остарели данни, повторен опит",
     "menu.refresh": "Обнови",
     "menu.opacity": "Непрозрачност",
-    "menu.notifyOnReset": "Известяване при нулиране",
+    "menu.notifyOnReset": "Известяване при нулиране на лимита",
     "menu.launchWithClaude": "Стартиране с Claude Code",
+    "menu.sendToTray": "Скрий в областта за известия",
+    "menu.show": "Покажи",
     "menu.quit": "Изход",
-    "notification.reset": "Лимитът {0} е нулиран"
+    "notification.reset": "Лимитът {0} е нулиран",
+    "notification.enabled": "Известията са включени"
   },
   "hr": {
     "label.session": "Trenutačna sesija (5 h)",
@@ -514,10 +571,13 @@
     "tooltip.stale": "Zastarjeli podaci, ponovni pokušaj",
     "menu.refresh": "Osvježi",
     "menu.opacity": "Neprozirnost",
-    "menu.notifyOnReset": "Obavijesti pri resetiranju",
+    "menu.notifyOnReset": "Obavijesti pri resetiranju limita",
     "menu.launchWithClaude": "Pokreni s Claude Code",
+    "menu.sendToTray": "Sakrij u traku sustava",
+    "menu.show": "Prikaži",
     "menu.quit": "Izlaz",
-    "notification.reset": "Limit {0} resetiran"
+    "notification.reset": "Limit {0} resetiran",
+    "notification.enabled": "Obavijesti omogućene"
   },
   "sl": {
     "label.session": "Trenutna seja (5 h)",
@@ -540,10 +600,13 @@
     "tooltip.stale": "Zastareli podatki, vnovični poskus",
     "menu.refresh": "Osveži",
     "menu.opacity": "Neprosojnost",
-    "menu.notifyOnReset": "Obvesti ob ponastavitvi",
+    "menu.notifyOnReset": "Obvesti ob ponastavitvi omejitve",
     "menu.launchWithClaude": "Zaženi s Claude Code",
+    "menu.sendToTray": "Skrij v sistemsko vrstico",
+    "menu.show": "Pokaži",
     "menu.quit": "Izhod",
-    "notification.reset": "Omejitev {0} ponastavljena"
+    "notification.reset": "Omejitev {0} ponastavljena",
+    "notification.enabled": "Obvestila omogočena"
   },
   "sr": {
     "label.session": "Тренутна сесија (5 ч)",
@@ -566,10 +629,13 @@
     "tooltip.stale": "Застарели подаци, поновни покушај",
     "menu.refresh": "Освежи",
     "menu.opacity": "Непровидност",
-    "menu.notifyOnReset": "Обавести при ресетовању",
+    "menu.notifyOnReset": "Обавести при ресетовању лимита",
     "menu.launchWithClaude": "Покрени уз Claude Code",
+    "menu.sendToTray": "Сакриј у системску палету",
+    "menu.show": "Прикажи",
     "menu.quit": "Излаз",
-    "notification.reset": "Лимит {0} ресетован"
+    "notification.reset": "Лимит {0} ресетован",
+    "notification.enabled": "Обавештења омогућена"
   },
   "sr-Cyrl": {
     "label.session": "Тренутна сесија (5 ч)",
@@ -592,10 +658,13 @@
     "tooltip.stale": "Застарели подаци, поновни покушај",
     "menu.refresh": "Освежи",
     "menu.opacity": "Непровидност",
-    "menu.notifyOnReset": "Обавести при ресетовању",
+    "menu.notifyOnReset": "Обавести при ресетовању лимита",
     "menu.launchWithClaude": "Покрени уз Claude Code",
+    "menu.sendToTray": "Сакриј у системску палету",
+    "menu.show": "Прикажи",
     "menu.quit": "Излаз",
-    "notification.reset": "Лимит {0} ресетован"
+    "notification.reset": "Лимит {0} ресетован",
+    "notification.enabled": "Обавештења омогућена"
   },
   "sr-Latn": {
     "label.session": "Trenutna sesija (5 č)",
@@ -618,10 +687,13 @@
     "tooltip.stale": "Zastareli podaci, ponovni pokušaj",
     "menu.refresh": "Osveži",
     "menu.opacity": "Neprovidnost",
-    "menu.notifyOnReset": "Obavesti pri resetovanju",
+    "menu.notifyOnReset": "Obavesti pri resetovanju limita",
     "menu.launchWithClaude": "Pokreni uz Claude Code",
+    "menu.sendToTray": "Sakrij u sistemsku paletu",
+    "menu.show": "Prikaži",
     "menu.quit": "Izlaz",
-    "notification.reset": "Limit {0} resetovan"
+    "notification.reset": "Limit {0} resetovan",
+    "notification.enabled": "Obaveštenja omogućena"
   },
   "ru": {
     "label.session": "Текущая сессия (5 ч)",
@@ -644,10 +716,13 @@
     "tooltip.stale": "Данные устарели, повторная попытка",
     "menu.refresh": "Обновить",
     "menu.opacity": "Непрозрачность",
-    "menu.notifyOnReset": "Уведомлять при сбросе",
+    "menu.notifyOnReset": "Уведомлять при сбросе лимита",
     "menu.launchWithClaude": "Запускать с Claude Code",
+    "menu.sendToTray": "Свернуть в трей",
+    "menu.show": "Показать",
     "menu.quit": "Выход",
-    "notification.reset": "Лимит {0} сброшен"
+    "notification.reset": "Лимит {0} сброшен",
+    "notification.enabled": "Уведомления включены"
   },
   "uk": {
     "label.session": "Поточна сесія (5 год)",
@@ -670,10 +745,13 @@
     "tooltip.stale": "Застарілі дані, повторна спроба",
     "menu.refresh": "Оновити",
     "menu.opacity": "Непрозорість",
-    "menu.notifyOnReset": "Сповіщати при скиданні",
+    "menu.notifyOnReset": "Сповіщати при скиданні ліміту",
     "menu.launchWithClaude": "Запускати з Claude Code",
+    "menu.sendToTray": "Згорнути в лоток",
+    "menu.show": "Показати",
     "menu.quit": "Вийти",
-    "notification.reset": "Ліміт {0} скинуто"
+    "notification.reset": "Ліміт {0} скинуто",
+    "notification.enabled": "Сповіщення ввімкнено"
   },
   "el": {
     "label.session": "Τρέχουσα συνεδρία (5 ώ)",
@@ -696,10 +774,13 @@
     "tooltip.stale": "Παλιά δεδομένα, νέα προσπάθεια",
     "menu.refresh": "Ανανέωση",
     "menu.opacity": "Αδιαφάνεια",
-    "menu.notifyOnReset": "Ειδοποίηση στην επαναφορά",
+    "menu.notifyOnReset": "Ειδοποίηση στην επαναφορά ορίου",
     "menu.launchWithClaude": "Εκκίνηση με το Claude Code",
+    "menu.sendToTray": "Απόκρυψη στην περιοχή ειδοποιήσεων",
+    "menu.show": "Εμφάνιση",
     "menu.quit": "Έξοδος",
-    "notification.reset": "Το όριο {0} επαναφέρθηκε"
+    "notification.reset": "Το όριο {0} επαναφέρθηκε",
+    "notification.enabled": "Οι ειδοποιήσεις ενεργοποιήθηκαν"
   },
   "tr": {
     "label.session": "Geçerli oturum (5 s)",
@@ -722,10 +803,13 @@
     "tooltip.stale": "Eski veriler, yeniden deneniyor",
     "menu.refresh": "Yenile",
     "menu.opacity": "Opaklık",
-    "menu.notifyOnReset": "Sıfırlamada bildir",
+    "menu.notifyOnReset": "Sınır sıfırlandığında bildir",
     "menu.launchWithClaude": "Claude Code ile başlat",
+    "menu.sendToTray": "Sistem tepsisine gönder",
+    "menu.show": "Göster",
     "menu.quit": "Çıkış",
-    "notification.reset": "{0} sınırı sıfırlandı"
+    "notification.reset": "{0} sınırı sıfırlandı",
+    "notification.enabled": "Bildirimler etkin"
   },
   "he": {
     "label.session": "הפעלה נוכחית (5 ש')",
@@ -748,10 +832,13 @@
     "tooltip.stale": "נתונים לא עדכניים, מנסה שוב",
     "menu.refresh": "רענן",
     "menu.opacity": "אטימות",
-    "menu.notifyOnReset": "התראה באיפוס",
+    "menu.notifyOnReset": "התראה באיפוס מגבלה",
     "menu.launchWithClaude": "הפעלה עם Claude Code",
+    "menu.sendToTray": "מזער למגש המערכת",
+    "menu.show": "הצג",
     "menu.quit": "יציאה",
-    "notification.reset": "המגבלה {0} אופסה"
+    "notification.reset": "המגבלה {0} אופסה",
+    "notification.enabled": "ההתראות הופעלו"
   },
   "ar": {
     "label.session": "الجلسة الحالية (5 س)",
@@ -774,10 +861,13 @@
     "tooltip.stale": "بيانات قديمة، تجري إعادة المحاولة",
     "menu.refresh": "تحديث",
     "menu.opacity": "التعتيم",
-    "menu.notifyOnReset": "إشعار عند إعادة التعيين",
+    "menu.notifyOnReset": "إشعار عند إعادة تعيين الحد",
     "menu.launchWithClaude": "التشغيل مع Claude Code",
+    "menu.sendToTray": "إرسال إلى علبة النظام",
+    "menu.show": "إظهار",
     "menu.quit": "خروج",
-    "notification.reset": "تمت إعادة تعيين حد {0}"
+    "notification.reset": "تمت إعادة تعيين حد {0}",
+    "notification.enabled": "تم تفعيل الإشعارات"
   },
   "hi": {
     "label.session": "वर्तमान सत्र (5 घं)",
@@ -800,10 +890,13 @@
     "tooltip.stale": "पुराना डेटा, पुनः प्रयास जारी",
     "menu.refresh": "रीफ़्रेश करें",
     "menu.opacity": "अपारदर्शिता",
-    "menu.notifyOnReset": "रीसेट पर सूचित करें",
+    "menu.notifyOnReset": "सीमा रीसेट पर सूचित करें",
     "menu.launchWithClaude": "Claude Code के साथ शुरू करें",
+    "menu.sendToTray": "ट्रे में भेजें",
+    "menu.show": "दिखाएँ",
     "menu.quit": "बाहर निकलें",
-    "notification.reset": "{0} सीमा रीसेट हुई"
+    "notification.reset": "{0} सीमा रीसेट हुई",
+    "notification.enabled": "सूचनाएँ सक्षम"
   },
   "th": {
     "label.session": "เซสชันปัจจุบัน (5 ชม.)",
@@ -826,10 +919,13 @@
     "tooltip.stale": "ข้อมูลล้าสมัย กำลังลองใหม่",
     "menu.refresh": "รีเฟรช",
     "menu.opacity": "ความทึบ",
-    "menu.notifyOnReset": "แจ้งเตือนเมื่อรีเซ็ต",
+    "menu.notifyOnReset": "แจ้งเตือนเมื่อรีเซ็ตขีดจำกัด",
     "menu.launchWithClaude": "เริ่มพร้อม Claude Code",
+    "menu.sendToTray": "ย่อไปที่ถาดระบบ",
+    "menu.show": "แสดง",
     "menu.quit": "ออก",
-    "notification.reset": "รีเซ็ตขีดจำกัด {0} แล้ว"
+    "notification.reset": "รีเซ็ตขีดจำกัด {0} แล้ว",
+    "notification.enabled": "เปิดใช้งานการแจ้งเตือนแล้ว"
   },
   "vi": {
     "label.session": "Phiên hiện tại (5g)",
@@ -852,10 +948,13 @@
     "tooltip.stale": "Dữ liệu cũ, đang thử lại",
     "menu.refresh": "Làm mới",
     "menu.opacity": "Độ mờ",
-    "menu.notifyOnReset": "Thông báo khi đặt lại",
+    "menu.notifyOnReset": "Thông báo khi đặt lại giới hạn",
     "menu.launchWithClaude": "Khởi chạy cùng Claude Code",
+    "menu.sendToTray": "Thu gọn vào khay hệ thống",
+    "menu.show": "Hiện",
     "menu.quit": "Thoát",
-    "notification.reset": "Đã đặt lại giới hạn {0}"
+    "notification.reset": "Đã đặt lại giới hạn {0}",
+    "notification.enabled": "Đã bật thông báo"
   },
   "id": {
     "label.session": "Sesi saat ini (5 j)",
@@ -878,10 +977,13 @@
     "tooltip.stale": "Data usang, mencoba lagi",
     "menu.refresh": "Segarkan",
     "menu.opacity": "Opasitas",
-    "menu.notifyOnReset": "Beri tahu saat reset",
+    "menu.notifyOnReset": "Beri tahu saat batas direset",
     "menu.launchWithClaude": "Luncurkan dengan Claude Code",
+    "menu.sendToTray": "Kecilkan ke baki sistem",
+    "menu.show": "Tampilkan",
     "menu.quit": "Keluar",
-    "notification.reset": "Batas {0} direset"
+    "notification.reset": "Batas {0} direset",
+    "notification.enabled": "Notifikasi diaktifkan"
   },
   "ms": {
     "label.session": "Sesi semasa (5 j)",
@@ -904,10 +1006,13 @@
     "tooltip.stale": "Data lapuk, mencuba semula",
     "menu.refresh": "Muat semula",
     "menu.opacity": "Kelegapan",
-    "menu.notifyOnReset": "Maklumkan semasa tetapan semula",
+    "menu.notifyOnReset": "Maklumkan apabila had ditetapkan semula",
     "menu.launchWithClaude": "Lancarkan dengan Claude Code",
+    "menu.sendToTray": "Kecilkan ke dulang sistem",
+    "menu.show": "Tunjuk",
     "menu.quit": "Keluar",
-    "notification.reset": "Had {0} ditetapkan semula"
+    "notification.reset": "Had {0} ditetapkan semula",
+    "notification.enabled": "Pemberitahuan didayakan"
   },
   "ja": {
     "label.session": "現在のセッション (5時間)",
@@ -930,10 +1035,13 @@
     "tooltip.stale": "データが古くなっています。再試行中",
     "menu.refresh": "更新",
     "menu.opacity": "不透明度",
-    "menu.notifyOnReset": "リセット時に通知",
+    "menu.notifyOnReset": "上限リセット時に通知",
     "menu.launchWithClaude": "Claude Code と一緒に起動",
+    "menu.sendToTray": "トレイに格納",
+    "menu.show": "表示",
     "menu.quit": "終了",
-    "notification.reset": "{0} の上限がリセットされました"
+    "notification.reset": "{0} の上限がリセットされました",
+    "notification.enabled": "通知を有効にしました"
   },
   "ko": {
     "label.session": "현재 세션 (5시간)",
@@ -956,10 +1064,13 @@
     "tooltip.stale": "오래된 데이터, 재시도 중",
     "menu.refresh": "새로 고침",
     "menu.opacity": "불투명도",
-    "menu.notifyOnReset": "재설정 시 알림",
+    "menu.notifyOnReset": "한도 재설정 시 알림",
     "menu.launchWithClaude": "Claude Code와 함께 시작",
+    "menu.sendToTray": "트레이로 보내기",
+    "menu.show": "표시",
     "menu.quit": "종료",
-    "notification.reset": "{0} 한도가 재설정됨"
+    "notification.reset": "{0} 한도가 재설정됨",
+    "notification.enabled": "알림 활성화됨"
   },
   "zh": {
     "label.session": "当前会话 (5小时)",
@@ -982,10 +1093,13 @@
     "tooltip.stale": "数据已过期，正在重试",
     "menu.refresh": "刷新",
     "menu.opacity": "不透明度",
-    "menu.notifyOnReset": "重置时通知",
+    "menu.notifyOnReset": "限额重置时通知",
     "menu.launchWithClaude": "随 Claude Code 启动",
+    "menu.sendToTray": "最小化到托盘",
+    "menu.show": "显示",
     "menu.quit": "退出",
-    "notification.reset": "{0} 限额已重置"
+    "notification.reset": "{0} 限额已重置",
+    "notification.enabled": "通知已启用"
   },
   "zh-Hans": {
     "label.session": "当前会话 (5小时)",
@@ -1008,10 +1122,13 @@
     "tooltip.stale": "数据已过期，正在重试",
     "menu.refresh": "刷新",
     "menu.opacity": "不透明度",
-    "menu.notifyOnReset": "重置时通知",
+    "menu.notifyOnReset": "限额重置时通知",
     "menu.launchWithClaude": "随 Claude Code 启动",
+    "menu.sendToTray": "最小化到托盘",
+    "menu.show": "显示",
     "menu.quit": "退出",
-    "notification.reset": "{0} 限额已重置"
+    "notification.reset": "{0} 限额已重置",
+    "notification.enabled": "通知已启用"
   },
   "zh-Hant": {
     "label.session": "目前工作階段 (5小時)",
@@ -1034,10 +1151,13 @@
     "tooltip.stale": "資料已過時，正在重試",
     "menu.refresh": "重新整理",
     "menu.opacity": "不透明度",
-    "menu.notifyOnReset": "重設時通知",
+    "menu.notifyOnReset": "限額重設時通知",
     "menu.launchWithClaude": "隨 Claude Code 啟動",
+    "menu.sendToTray": "最小化到系統匣",
+    "menu.show": "顯示",
     "menu.quit": "結束",
-    "notification.reset": "{0} 限額已重設"
+    "notification.reset": "{0} 限額已重設",
+    "notification.enabled": "通知已啟用"
   },
   "ca": {
     "label.session": "Sessió actual (5 h)",
@@ -1060,10 +1180,13 @@
     "tooltip.stale": "Dades obsoletes, es torna a provar",
     "menu.refresh": "Actualitza",
     "menu.opacity": "Opacitat",
-    "menu.notifyOnReset": "Notifica en restablir",
+    "menu.notifyOnReset": "Notifica en restablir el límit",
     "menu.launchWithClaude": "Inicia amb Claude Code",
+    "menu.sendToTray": "Envia a la safata",
+    "menu.show": "Mostra",
     "menu.quit": "Surt",
-    "notification.reset": "Límit {0} restablert"
+    "notification.reset": "Límit {0} restablert",
+    "notification.enabled": "Notificacions activades"
   },
   "eu": {
     "label.session": "Uneko saioa (5 o)",
@@ -1086,10 +1209,13 @@
     "tooltip.stale": "Datu zaharkituak, berriro saiatzen",
     "menu.refresh": "Freskatu",
     "menu.opacity": "Opakutasuna",
-    "menu.notifyOnReset": "Jakinarazi berrezartzean",
+    "menu.notifyOnReset": "Jakinarazi muga berrezartzean",
     "menu.launchWithClaude": "Abiarazi Claude Code-rekin",
+    "menu.sendToTray": "Bidali erretilura",
+    "menu.show": "Erakutsi",
     "menu.quit": "Irten",
-    "notification.reset": "{0} muga berrezarri da"
+    "notification.reset": "{0} muga berrezarri da",
+    "notification.enabled": "Jakinarazpenak gaituta"
   },
   "gl": {
     "label.session": "Sesión actual (5 h)",
@@ -1112,10 +1238,13 @@
     "tooltip.stale": "Datos obsoletos, tentando de novo",
     "menu.refresh": "Actualizar",
     "menu.opacity": "Opacidade",
-    "menu.notifyOnReset": "Notificar ao restablecer",
+    "menu.notifyOnReset": "Notificar ao restablecer o límite",
     "menu.launchWithClaude": "Iniciar con Claude Code",
+    "menu.sendToTray": "Enviar á bandexa",
+    "menu.show": "Mostrar",
     "menu.quit": "Saír",
-    "notification.reset": "Límite {0} restablecido"
+    "notification.reset": "Límite {0} restablecido",
+    "notification.enabled": "Notificacións activadas"
   },
   "et": {
     "label.session": "Praegune seanss (5 t)",
@@ -1138,10 +1267,13 @@
     "tooltip.stale": "Aegunud andmed, proovitakse uuesti",
     "menu.refresh": "Värskenda",
     "menu.opacity": "Läbipaistmatus",
-    "menu.notifyOnReset": "Teavita lähtestamisel",
+    "menu.notifyOnReset": "Teavita limiidi lähtestamisel",
     "menu.launchWithClaude": "Käivita koos Claude Code'iga",
+    "menu.sendToTray": "Peida teavitusalasse",
+    "menu.show": "Kuva",
     "menu.quit": "Välju",
-    "notification.reset": "Limiit {0} lähtestatud"
+    "notification.reset": "Limiit {0} lähtestatud",
+    "notification.enabled": "Teavitused lubatud"
   },
   "lv": {
     "label.session": "Pašreizējā sesija (5 st)",
@@ -1164,10 +1296,13 @@
     "tooltip.stale": "Novecojuši dati, mēģina vēlreiz",
     "menu.refresh": "Atsvaidzināt",
     "menu.opacity": "Necaurspīdīgums",
-    "menu.notifyOnReset": "Paziņot pie atiestates",
+    "menu.notifyOnReset": "Paziņot, kad limits tiek atiestatīts",
     "menu.launchWithClaude": "Palaist kopā ar Claude Code",
+    "menu.sendToTray": "Paslēpt paziņojumu apgabalā",
+    "menu.show": "Rādīt",
     "menu.quit": "Iziet",
-    "notification.reset": "Limits {0} atiestatīts"
+    "notification.reset": "Limits {0} atiestatīts",
+    "notification.enabled": "Paziņojumi iespējoti"
   },
   "lt": {
     "label.session": "Dabartinė sesija (5 val.)",
@@ -1190,9 +1325,12 @@
     "tooltip.stale": "Pasenę duomenys, bandoma iš naujo",
     "menu.refresh": "Atnaujinti",
     "menu.opacity": "Nepermatomumas",
-    "menu.notifyOnReset": "Pranešti atstačius",
+    "menu.notifyOnReset": "Pranešti atstačius limitą",
     "menu.launchWithClaude": "Paleisti su Claude Code",
+    "menu.sendToTray": "Suskleisti į dėklą",
+    "menu.show": "Rodyti",
     "menu.quit": "Išeiti",
-    "notification.reset": "Limitas {0} atstatytas"
+    "notification.reset": "Limitas {0} atstatytas",
+    "notification.enabled": "Pranešimai įjungti"
   }
 }
