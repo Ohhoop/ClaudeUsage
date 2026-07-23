@@ -1,64 +1,64 @@
 # Claude Usage Widget
 
-Overlay Windows discret, toujours au premier plan, affichant les limites d'usage de l'abonnement Claude. Le nom d'affichage est « Claude Usage Widget »; les identifiants internes (exécutable `ClaudeUsage.exe`, dossier de réglages `%APPDATA%\ClaudeUsage`) restent inchangés.
+A discreet, always-on-top Windows overlay showing the usage limits of your Claude subscription. The display name is "Claude Usage Widget"; the internal identifiers (executable `ClaudeUsage.exe`, settings folder `%APPDATA%\ClaudeUsage`) stay unchanged.
 
-![Aperçu de Claude Usage Widget](docs/overlay.png)
+![Claude Usage Widget preview](docs/overlay.png)
 
-Limites affichées :
+Limits shown:
 
-- Session 5 h
-- Hebdomadaire globale
-- Hebdomadaire par modèle
+- 5-hour session
+- Weekly, all models
+- Weekly, per model
 
-Chaque ligne montre une barre de progression, le pourcentage utilisé et le délai avant la réinitialisation. L'overlay n'apparaît que lorsqu'un processus `claude` tourne (app de bureau Claude ou Claude Code) et se cache automatiquement sinon.
+Each row shows a progress bar, the percentage used and the time left before the reset. The overlay only appears while a `claude` process is running (Claude desktop app or Claude Code) and hides itself otherwise.
 
-## Fonctionnement
+## How it works
 
-- Les données proviennent de l'endpoint de compte `https://api.anthropic.com/api/oauth/usage`, interrogé toutes les 5 minutes uniquement quand l'overlay est visible. Aucune consommation d'usage de modèle. En cas de réponse 429, le délai Retry-After est respecté avant tout nouvel essai, et cette échéance est conservée dans les réglages afin qu'un redémarrage de l'application n'envoie pas de requête tant que la pause n'est pas écoulée.
-- Le jeton d'accès est lu localement dans `%USERPROFILE%\.claude\.credentials.json`. Il n'est jamais écrit, journalisé ni transmis ailleurs qu'à l'API d'Anthropic.
-- La détection de présence vérifie toutes les 5 secondes l'existence d'un processus nommé `claude`.
-- Une icône de zone de notification donne accès au menu en tout temps et émet une notification quand une limite se réinitialise, même si l'overlay est caché, tant que l'application tourne.
+- Data comes from the account endpoint `https://api.anthropic.com/api/oauth/usage`, polled every 5 minutes and only while the overlay is visible. No model usage is consumed. On a 429 response the Retry-After delay is honored before any new attempt, and that deadline is stored in the settings so a restart of the application does not send a request until the pause has elapsed.
+- The access token is read locally from `%USERPROFILE%\.claude\.credentials.json`. It is never written, logged or sent anywhere other than the Anthropic API.
+- Presence detection checks every 5 seconds for a process named `claude`.
+- A tray icon gives access to the menu at all times and raises a notification when a limit resets, even while the overlay is hidden, as long as the application is running.
 
-## Prérequis
+## Requirements
 
-- Windows 10 ou plus récent
+- Windows 10 or newer
 - .NET Desktop Runtime 8.0
 
-## Compilation et installation
+## Build and install
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File build.ps1
 powershell -ExecutionPolicy Bypass -File build.ps1 -Install
 ```
 
-Le premier appel exécute les tests puis publie `dist\ClaudeUsage.exe`. Le second copie en plus l'exécutable vers `%LOCALAPPDATA%\Programs\ClaudeUsage` et le lance; utilisez cette copie au quotidien pour qu'une recompilation n'écrase jamais l'exécutable en cours.
+The first call runs the tests then publishes `dist\ClaudeUsage.exe`. The second also copies the executable to `%LOCALAPPDATA%\Programs\ClaudeUsage` and launches it; use that copy day to day so a rebuild never overwrites the running executable.
 
-## Utilisation
+## Usage
 
-- Glisser avec le bouton gauche pour déplacer la fenêtre; la position est mémorisée.
-- Clic droit (sur l'overlay ou l'icône de zone de notification) : Actualiser, Opacité, Notifier au reset, Alerter à l'approche, Tester la notification, Lancer avec Claude Code, Réduire dans la zone de notification, Quitter.
-- « Réduire dans la zone de notification » masque la fenêtre tout en gardant l'icône et le suivi actifs; l'entrée devient « Afficher » pour la ramener. Un clic gauche sur l'icône de zone de notification bascule aussi l'affichage.
-- L'icône de zone de notification reflète l'usage : trois mini-barres colorées selon la sévérité, et son infobulle montre les pourcentages.
-- « Alerter à l'approche » ouvre un sous-menu par limite (session, hebdo, modèle) où l'on choisit le seuil d'alerte en pourcentage (ou Désactivé). Au franchissement du seuil choisi puis à 100 %, une notification est émise, en plus du reset. Seuil par défaut : 90 % par limite.
-- Lors du glisser, la fenêtre s'accroche automatiquement aux bords de l'écran.
-- Le pourcentage reflète l'usage réel du compte : il ne change que lorsque vous utilisez Claude, ou retombe lors d'un reset. Le compte à rebours est calculé localement : arrivé à zéro, il attend une minute, déclenche la notification puis repart pour le cycle suivant, sans requête supplémentaire. L'interrogation ne sert qu'à rafraîchir les pourcentages, à rythme constant.
-- Les réglages sont conservés dans `%APPDATA%\ClaudeUsage\settings.json`.
+- Drag with the left button to move the window; the position is remembered.
+- Right-click (on the overlay or the tray icon): Refresh, Opacity, Notify on limit reset, Alert near limit, Test notification, Launch with Claude Code, Send to tray, Quit.
+- "Send to tray" hides the window while keeping the icon and tracking active; the entry becomes "Show" to bring it back. A left click on the tray icon also toggles the display.
+- The tray icon reflects usage: three mini bars colored by severity, and its tooltip shows the percentages.
+- "Alert near limit" opens a submenu per limit (session, weekly, model) where you pick the alert threshold as a percentage (or Disabled). When the chosen threshold is crossed and again at 100%, a notification is raised, in addition to the reset. Default threshold: 90% per limit.
+- While dragging, the window snaps to the screen edges.
+- The percentage reflects real account usage: it only changes when you use Claude, or drops on a reset. The countdown is computed locally: when it reaches zero it waits one minute, raises the notification, then restarts for the next cycle, with no extra request. Polling only refreshes the percentages, at a constant cadence.
+- Settings are stored in `%APPDATA%\ClaudeUsage\settings.json`.
 
-## Langues
+## Languages
 
-L'interface suit la langue d'affichage de Windows. Les traductions sont embarquées dans l'exécutable (`translations.json`) pour une quarantaine de langues; l'anglais est la langue par défaut et sert de repli pour toute langue absente ou toute clé manquante. La résolution suit la chaîne de la culture Windows (par exemple `fr-CA`, puis `fr`, puis `en`). Les formats de date et d'heure suivent les paramètres régionaux de Windows. Pour surcharger ou ajouter des traductions sans recompiler, déposez un fichier `translations.json` de même structure à côté de l'exécutable : ses valeurs remplacent celles embarquées.
+The interface follows the Windows display language. Translations are embedded in the executable (`translations.json`) for around forty languages; English is the default and the fallback for any missing language or key. Resolution follows the Windows culture chain (for example `fr-CA`, then `fr`, then `en`). Date and time formats follow the Windows regional settings. To override or add translations without rebuilding, drop a `translations.json` file with the same structure next to the executable: its values replace the embedded ones.
 
-## Lancement automatique
+## Automatic launch
 
-L'option « Lancer avec Claude Code » gère un hook SessionStart dans `%USERPROFILE%\.claude\settings.json` : cochée, le hook est présent et chaque session Claude Code démarre l'overlay; décochée, le hook est retiré. Le reste du fichier est préservé tel quel. L'application quitte d'elle-même environ 30 secondes après la disparition du dernier processus `claude`. Ouvrir l'app Claude uniquement pour du clavardage, sans session, ne déclenche pas le lancement.
+The "Launch with Claude Code" option manages a SessionStart hook in `%USERPROFILE%\.claude\settings.json`: when checked, the hook is present and every Claude Code session starts the overlay; when unchecked, the hook is removed. The rest of the file is preserved as is. The application exits on its own about 30 seconds after the last `claude` process disappears. Opening the Claude app only for chatting, without a session, does not trigger the launch.
 
-## États dégradés
+## Degraded states
 
-- « Jeton introuvable » : le fichier de credentials est absent; ouvrez Claude ou Claude Code pour le régénérer.
-- « Jeton expiré » : le jeton local n'est plus valide; il sera rafraîchi par Claude Code à sa prochaine utilisation.
-- Affichage atténué : dernière valeur connue conservée pendant une erreur réseau; nouvelle tentative chaque minute.
+- "Token not found": the credentials file is missing; open Claude or Claude Code to regenerate it.
+- "Token expired": the local token is no longer valid; it will be refreshed by Claude Code on its next use.
+- Dimmed display: last known value kept during a network error; retried each cycle.
 
-## Limites connues
+## Known limitations
 
-- Les fenêtres en plein écran exclusif (jeux) peuvent recouvrir l'overlay.
-- Les notifications respectent l'assistant de concentration de Windows et peuvent être masquées par celui-ci.
+- Exclusive fullscreen windows (games) can cover the overlay.
+- Notifications respect the Windows Focus Assist and can be hidden by it.
