@@ -20,14 +20,14 @@ public sealed class OverlayForm : Form
     private const int WsExNoActivate = 0x08000000;
 
     private readonly AppSettings _settings;
-    private readonly string _countdownZero = Loc.T("countdown.zero");
     private readonly string _naText = Loc.T("na");
     private readonly System.Windows.Forms.Timer _presenceTimer = new();
     private readonly System.Windows.Forms.Timer _fetchTimer = new();
     private readonly System.Windows.Forms.Timer _tickTimer = new();
     private readonly ToolTip _toolTip = new();
     private readonly NotifyIcon _trayIcon = new();
-    private readonly Dictionary<string, DateTimeOffset> _lastResets = new();
+    private readonly Dictionary<string, DateTimeOffset> _resetAt = new();
+    private readonly HashSet<string> _notifiedResets = new();
 
     private UsageSnapshot? _snapshot;
     private FetchStatus _status = FetchStatus.Ok;
@@ -250,10 +250,13 @@ public sealed class OverlayForm : Form
         {
             EnsureOnScreen();
         }
+
+        ProcessResets();
     }
 
-    private void DetectResetsAndNotify(UsageSnapshot snapshot)
+    private void UpdateResetTargets(UsageSnapshot snapshot)
     {
+        var now = DateTimeOffset.UtcNow;
         foreach (var row in snapshot.Rows)
         {
             if (row.ResetsAt is not DateTimeOffset resetsAt)
@@ -261,36 +264,84 @@ public sealed class OverlayForm : Form
                 continue;
             }
 
-            if (_lastResets.TryGetValue(row.Kind, out var previous)
-                && resetsAt - previous > TimeSpan.FromMinutes(1)
-                && _settings.NotifyOnReset)
+            if (!_resetAt.TryGetValue(row.Kind, out var current))
+            {
+                var effective = resetsAt;
+                if (effective <= now)
+                {
+                    _notifiedResets.Add(ResetKey(row.Kind, resetsAt));
+                    if (ResetWindow(row.Kind) is TimeSpan seed)
+                    {
+                        while (effective <= now)
+                        {
+                            effective += seed;
+                        }
+                    }
+                }
+
+                _resetAt[row.Kind] = effective;
+            }
+            else if (resetsAt > current)
+            {
+                _resetAt[row.Kind] = resetsAt;
+            }
+        }
+    }
+
+    private void ProcessResets()
+    {
+        var rows = _snapshot?.Rows;
+        if (rows is null)
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var rolled = false;
+        foreach (var row in rows)
+        {
+            if (!_resetAt.TryGetValue(row.Kind, out var target) || now < target + TimeSpan.FromMinutes(1))
+            {
+                continue;
+            }
+
+            if (_notifiedResets.Add(ResetKey(row.Kind, target)) && _settings.NotifyOnReset)
             {
                 _trayIcon.ShowBalloonTip(5000, "ClaudeUsage", string.Format(CultureInfo.CurrentCulture, Loc.T("notification.reset"), row.Label), ToolTipIcon.Info);
             }
 
-            _lastResets[row.Kind] = resetsAt;
-        }
-    }
-
-    private void ScheduleNextFetch(UsageSnapshot snapshot)
-    {
-        var now = DateTimeOffset.UtcNow;
-        var due = false;
-        foreach (var row in snapshot.Rows)
-        {
-            if (row.ResetsAt is DateTimeOffset resetsAt && resetsAt <= now)
+            if (ResetWindow(row.Kind) is TimeSpan window)
             {
-                due = true;
-                break;
+                var next = target;
+                while (next <= now)
+                {
+                    next += window;
+                }
+
+                _resetAt[row.Kind] = next;
+                rolled = true;
             }
         }
 
-        var interval = due ? 30_000 : 120_000;
-        if (_fetchTimer.Interval != interval)
+        if (rolled)
         {
-            _fetchTimer.Interval = interval;
+            RefreshCountdowns();
+            Invalidate();
         }
     }
+
+    private DateTimeOffset? EffectiveReset(LimitRow row)
+        => _resetAt.TryGetValue(row.Kind, out var eff) ? eff : row.ResetsAt;
+
+    private static string ResetKey(string kind, DateTimeOffset resetsAt) => $"{kind}|{resetsAt.UtcTicks}";
+
+    private static TimeSpan? ResetWindow(string kind) => kind switch
+    {
+        "session" => TimeSpan.FromHours(5),
+        "weekly_all" => TimeSpan.FromDays(7),
+        "weekly_scoped" => TimeSpan.FromDays(7),
+        _ => null,
+    };
 
     private void ShowVisual()
     {
@@ -323,13 +374,12 @@ public sealed class OverlayForm : Form
             var outcome = await UsageClient.FetchAsync();
             if (outcome.Status == FetchStatus.Ok && outcome.Snapshot is not null)
             {
-                DetectResetsAndNotify(outcome.Snapshot);
                 _snapshot = outcome.Snapshot;
                 _lastSuccessUtc = DateTimeOffset.UtcNow;
                 _status = FetchStatus.Ok;
+                UpdateResetTargets(outcome.Snapshot);
                 RefreshCountdowns();
                 UpdateSize();
-                ScheduleNextFetch(outcome.Snapshot);
             }
             else if (outcome.Status == FetchStatus.RateLimited)
             {
@@ -371,26 +421,13 @@ public sealed class OverlayForm : Form
             return;
         }
 
+        ProcessResets();
         var previous = _countdowns;
         RefreshCountdowns();
-        if (previous.SequenceEqual(_countdowns))
+        if (!previous.SequenceEqual(_countdowns))
         {
-            return;
+            Invalidate();
         }
-
-        if (previous.Length == _countdowns.Length)
-        {
-            for (var i = 0; i < previous.Length; i++)
-            {
-                if (previous[i] != _countdowns[i] && _countdowns[i] == _countdownZero)
-                {
-                    _ = FetchNowAsync();
-                    break;
-                }
-            }
-        }
-
-        Invalidate();
     }
 
     private void RefreshCountdowns()
@@ -406,7 +443,7 @@ public sealed class OverlayForm : Form
         var values = new string[rows.Count];
         for (var i = 0; i < rows.Count; i++)
         {
-            var resetsAt = rows[i].ResetsAt;
+            var resetsAt = EffectiveReset(rows[i]);
             values[i] = resetsAt is null ? _naText : CountdownFormatter.Format(resetsAt.Value - now);
         }
 
@@ -426,9 +463,10 @@ public sealed class OverlayForm : Form
             var lines = new List<string>();
             foreach (var row in _snapshot.Rows)
             {
-                var reset = row.ResetsAt is null
+                var effective = EffectiveReset(row);
+                var reset = effective is null
                     ? _naText
-                    : row.ResetsAt.Value.ToLocalTime().ToString("ddd d MMM HH:mm", culture);
+                    : effective.Value.ToLocalTime().ToString("ddd d MMM HH:mm", culture);
                 lines.Add(string.Format(culture, Loc.T("tooltip.row"), row.Label, Math.Round(row.Percent), reset));
             }
 

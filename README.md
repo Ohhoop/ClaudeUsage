@@ -34,7 +34,7 @@ Le premier appel exécute les tests puis publie `dist\ClaudeUsage.exe`. Le secon
 - Glisser avec le bouton gauche pour déplacer la fenêtre; la position est mémorisée.
 - Clic droit (sur l'overlay ou l'icône de zone de notification) : Actualiser, Opacité, Notifier au reset, Lancer avec Claude Code, Réduire dans la zone de notification, Quitter.
 - « Réduire dans la zone de notification » masque la fenêtre tout en gardant l'icône et le suivi actifs; l'entrée devient « Afficher » pour la ramener.
-- Le pourcentage reflète l'usage réel du compte : il ne change que lorsque vous utilisez Claude, ou retombe lors d'un reset. Seul le compte à rebours descend en continu. À l'approche d'un reset, l'interrogation passe à 30 secondes le temps que la nouvelle échéance apparaisse.
+- Le pourcentage reflète l'usage réel du compte : il ne change que lorsque vous utilisez Claude, ou retombe lors d'un reset. Le compte à rebours est calculé localement : arrivé à zéro, il attend une minute, déclenche la notification puis repart pour le cycle suivant, sans requête supplémentaire. L'interrogation ne sert qu'à rafraîchir les pourcentages, à rythme constant.
 - Les réglages sont conservés dans `%APPDATA%\ClaudeUsage\settings.json`.
 
 ## Langues
